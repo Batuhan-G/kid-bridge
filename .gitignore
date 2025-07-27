@@ -1,1 +1,55 @@
-node_modules
+# ----------------------
+# Node modules & lock
+node_modules/
+pnpm-lock.yaml
+
+# ----------------------
+# Build output
+dist/
+.next/
+out/
+build/
+
+# ----------------------
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# ----------------------
+# Operating system
+.DS_Store
+Thumbs.db
+
+# ----------------------
+# IDE/editor files
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# ----------------------
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# ----------------------
+# Env files (config/secrets)
+.env
+.env.local
+.env.*.local
+
+# ----------------------
+# Coverage/test outputs
+coverage/
+*.lcov
+
+# ----------------------
+# TurboRepo (kullanıyorsan)
+.turbo/
+
+# ----------------------
+# Optional: script output
+scripts/output/

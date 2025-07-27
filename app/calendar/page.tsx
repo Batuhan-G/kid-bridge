@@ -1,13 +1,25 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -16,38 +28,49 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Calendar, Plus, Clock, MapPin, Edit, Trash2, GraduationCap, Heart, UsersIcon, FileText } from "lucide-react"
-import { ChildSelector } from "@/components/child-selector"
-import { Sidebar } from "@/components/sidebar"
-import { SidebarTrigger } from "@/components/sidebar-trigger"
+} from "@/components/ui/dialog";
+import {
+  Calendar,
+  Plus,
+  Clock,
+  MapPin,
+  Edit,
+  Trash2,
+  GraduationCap,
+  Heart,
+  UsersIcon,
+  FileText,
+} from "lucide-react";
+import { ChildSelector } from "@/components/child-selector/child-selector";
+import { Sidebar } from "@/components/sidebar/sidebar";
+import { SidebarTrigger } from "@/components/sidebar-trigger/sidebar-trigger";
 
 interface Event {
-  id: number
-  title: string
-  date: string
-  time: string
-  location: string
-  type: "okul" | "sağlık" | "sosyal" | "diğer"
-  child: string
-  description?: string
-  reminder?: boolean
+  id: number;
+  title: string;
+  date: string;
+  time: string;
+  location: string;
+  type: "okul" | "sağlık" | "sosyal" | "diğer";
+  child: string;
+  description?: string;
+  reminder?: boolean;
 }
 
 export default function CalendarPage() {
-  const [isAddEventOpen, setIsAddEventOpen] = useState(false)
-  const [selectedChild, setSelectedChild] = useState<any>(null)
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null)
-  const [isEventDetailOpen, setIsEventDetailOpen] = useState(false)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [successMessage, setSuccessMessage] = useState("")
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [isAddEventOpen, setIsAddEventOpen] = useState(false);
+  const [selectedChild, setSelectedChild] = useState<any>(null);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [isEventDetailOpen, setIsEventDetailOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const children = [
     { id: 1, name: "Elif", age: 8, avatar: "E", school: "Atatürk İlkokulu" },
     { id: 2, name: "Can", age: 12, avatar: "C", school: "Gazi Ortaokulu" },
     { id: 3, name: "Zeynep", age: 6, avatar: "Z", school: "Anaokulu" },
-  ]
+  ];
 
   const [events, setEvents] = useState<Event[]>([
     {
@@ -83,7 +106,7 @@ export default function CalendarPage() {
       description: "Sınıf arkadaşının doğum günü",
       reminder: false,
     },
-  ])
+  ]);
 
   const eventTypes = [
     {
@@ -118,19 +141,19 @@ export default function CalendarPage() {
       textColor: "text-gray-700",
       borderColor: "border-gray-200",
     },
-  ]
+  ];
 
   const totalStats = {
     events: children.reduce((sum) => sum + 2, 0),
     messages: children.reduce((sum) => sum + 1, 0),
     expenses: children.reduce((sum) => sum + 800, 0),
-  }
+  };
 
   const handleAddEvent = async (formData: FormData) => {
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     const newEvent: Event = {
       id: events.length + 1,
@@ -142,40 +165,42 @@ export default function CalendarPage() {
       child: formData.get("child") as string,
       description: formData.get("description") as string,
       reminder: formData.get("reminder") === "on",
-    }
+    };
 
-    setEvents([...events, newEvent])
-    setIsAddEventOpen(false)
-    setIsSubmitting(false)
-    setSuccessMessage("Etkinlik başarıyla eklendi!")
+    setEvents([...events, newEvent]);
+    setIsAddEventOpen(false);
+    setIsSubmitting(false);
+    setSuccessMessage("Etkinlik başarıyla eklendi!");
 
     // Clear success message after 3 seconds
-    setTimeout(() => setSuccessMessage(""), 3000)
-  }
+    setTimeout(() => setSuccessMessage(""), 3000);
+  };
 
   const handleEventClick = (event: Event) => {
-    setSelectedEvent(event)
-    setIsEventDetailOpen(true)
-  }
+    setSelectedEvent(event);
+    setIsEventDetailOpen(true);
+  };
 
   const handleDeleteEvent = (eventId: number) => {
-    setEvents(events.filter((e) => e.id !== eventId))
-    setIsEventDetailOpen(false)
-    setSuccessMessage("Etkinlik silindi!")
-    setTimeout(() => setSuccessMessage(""), 3000)
-  }
+    setEvents(events.filter((e) => e.id !== eventId));
+    setIsEventDetailOpen(false);
+    setSuccessMessage("Etkinlik silindi!");
+    setTimeout(() => setSuccessMessage(""), 3000);
+  };
 
-  const filteredEvents = selectedChild ? events.filter((event) => event.child === selectedChild.name) : events
+  const filteredEvents = selectedChild
+    ? events.filter((event) => event.child === selectedChild.name)
+    : events;
 
   const upcomingEvents = filteredEvents
     .filter((event) => new Date(event.date) >= new Date())
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .slice(0, 3)
+    .slice(0, 3);
 
   const todayEvents = filteredEvents.filter((event) => {
-    const today = new Date().toISOString().split("T")[0]
-    return event.date === today
-  })
+    const today = new Date().toISOString().split("T")[0];
+    return event.date === today;
+  });
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -195,7 +220,10 @@ export default function CalendarPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               {/* Sidebar Trigger */}
-              <SidebarTrigger onToggle={() => setIsSidebarOpen(!isSidebarOpen)} totalStats={totalStats} />
+              <SidebarTrigger
+                onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+                totalStats={totalStats}
+              />
 
               <div className="flex items-center space-x-2">
                 <Calendar className="w-6 h-6 text-indigo-600" />
@@ -220,21 +248,28 @@ export default function CalendarPage() {
                 <DialogContent className="sm:max-w-[500px]">
                   <form
                     onSubmit={(e) => {
-                      e.preventDefault()
-                      const formData = new FormData(e.currentTarget)
-                      handleAddEvent(formData)
+                      e.preventDefault();
+                      const formData = new FormData(e.currentTarget);
+                      handleAddEvent(formData);
                     }}
                   >
                     <DialogHeader>
                       <DialogTitle>Yeni Etkinlik Ekle</DialogTitle>
-                      <DialogDescription>Çocuğunuz için yeni bir etkinlik planlayın</DialogDescription>
+                      <DialogDescription>
+                        Çocuğunuz için yeni bir etkinlik planlayın
+                      </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                       <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="title" className="text-right">
                           Başlık
                         </Label>
-                        <Input id="title" name="title" className="col-span-3" required />
+                        <Input
+                          id="title"
+                          name="title"
+                          className="col-span-3"
+                          required
+                        />
                       </div>
                       <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="child" className="text-right">
@@ -277,32 +312,57 @@ export default function CalendarPage() {
                         <Label htmlFor="date" className="text-right">
                           Tarih
                         </Label>
-                        <Input id="date" name="date" type="date" className="col-span-3" required />
+                        <Input
+                          id="date"
+                          name="date"
+                          type="date"
+                          className="col-span-3"
+                          required
+                        />
                       </div>
                       <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="time" className="text-right">
                           Saat
                         </Label>
-                        <Input id="time" name="time" type="time" className="col-span-3" required />
+                        <Input
+                          id="time"
+                          name="time"
+                          type="time"
+                          className="col-span-3"
+                          required
+                        />
                       </div>
                       <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="location" className="text-right">
                           Konum
                         </Label>
-                        <Input id="location" name="location" className="col-span-3" />
+                        <Input
+                          id="location"
+                          name="location"
+                          className="col-span-3"
+                        />
                       </div>
                       <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="description" className="text-right">
                           Açıklama
                         </Label>
-                        <Textarea id="description" name="description" className="col-span-3" />
+                        <Textarea
+                          id="description"
+                          name="description"
+                          className="col-span-3"
+                        />
                       </div>
                       <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="reminder" className="text-right">
                           Hatırlatma
                         </Label>
                         <div className="col-span-3">
-                          <input type="checkbox" id="reminder" name="reminder" className="mr-2" />
+                          <input
+                            type="checkbox"
+                            id="reminder"
+                            name="reminder"
+                            className="mr-2"
+                          />
                           <Label htmlFor="reminder" className="text-sm">
                             Etkinlik öncesi hatırlat
                           </Label>
@@ -360,8 +420,10 @@ export default function CalendarPage() {
             <CardContent>
               <div className="space-y-3">
                 {todayEvents.map((event) => {
-                  const eventType = eventTypes.find((type) => type.id === event.type)
-                  const IconComponent = eventType?.icon || FileText
+                  const eventType = eventTypes.find(
+                    (type) => type.id === event.type
+                  );
+                  const IconComponent = eventType?.icon || FileText;
 
                   return (
                     <div
@@ -371,7 +433,9 @@ export default function CalendarPage() {
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center space-x-3">
-                          <IconComponent className={`w-5 h-5 ${eventType?.textColor}`} />
+                          <IconComponent
+                            className={`w-5 h-5 ${eventType?.textColor}`}
+                          />
                           <div>
                             <h3 className="font-medium">{event.title}</h3>
                             <div className="flex items-center space-x-2 text-sm text-gray-600">
@@ -388,13 +452,15 @@ export default function CalendarPage() {
                           </div>
                         </div>
                         <div className="text-sm">
-                          <span className={`px-2 py-1 rounded text-xs ${eventType?.bgColor} ${eventType?.textColor}`}>
+                          <span
+                            className={`px-2 py-1 rounded text-xs ${eventType?.bgColor} ${eventType?.textColor}`}
+                          >
                             {eventType?.name}
                           </span>
                         </div>
                       </div>
                     </div>
-                  )
+                  );
                 })}
               </div>
             </CardContent>
@@ -410,7 +476,9 @@ export default function CalendarPage() {
                 <span>
                   Yaklaşan Etkinlikler
                   {selectedChild && (
-                    <span className="text-sm font-normal text-gray-600 ml-2">- {selectedChild.name}</span>
+                    <span className="text-sm font-normal text-gray-600 ml-2">
+                      - {selectedChild.name}
+                    </span>
                   )}
                 </span>
               </div>
@@ -419,8 +487,10 @@ export default function CalendarPage() {
           <CardContent>
             <div className="space-y-4">
               {upcomingEvents.map((event) => {
-                const eventType = eventTypes.find((type) => type.id === event.type)
-                const IconComponent = eventType?.icon || FileText
+                const eventType = eventTypes.find(
+                  (type) => type.id === event.type
+                );
+                const IconComponent = eventType?.icon || FileText;
 
                 return (
                   <div
@@ -430,12 +500,16 @@ export default function CalendarPage() {
                   >
                     <div className="flex items-center space-x-4">
                       <div className={`p-2 rounded-lg ${eventType?.bgColor}`}>
-                        <IconComponent className={`w-5 h-5 ${eventType?.textColor}`} />
+                        <IconComponent
+                          className={`w-5 h-5 ${eventType?.textColor}`}
+                        />
                       </div>
                       <div>
                         <h3 className="font-medium">{event.title}</h3>
                         <div className="flex items-center space-x-2 text-sm text-gray-600">
-                          <span>{new Date(event.date).toLocaleDateString("tr-TR")}</span>
+                          <span>
+                            {new Date(event.date).toLocaleDateString("tr-TR")}
+                          </span>
                           <span>•</span>
                           <Clock className="w-4 h-4" />
                           <span>{event.time}</span>
@@ -451,7 +525,9 @@ export default function CalendarPage() {
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <span className={`px-2 py-1 rounded text-xs ${eventType?.bgColor} ${eventType?.textColor}`}>
+                      <span
+                        className={`px-2 py-1 rounded text-xs ${eventType?.bgColor} ${eventType?.textColor}`}
+                      >
                         {eventType?.name}
                       </span>
                       {event.reminder && (
@@ -461,7 +537,7 @@ export default function CalendarPage() {
                       )}
                     </div>
                   </div>
-                )
+                );
               })}
             </div>
           </CardContent>
@@ -476,11 +552,16 @@ export default function CalendarPage() {
           <CardContent>
             <div className="space-y-4">
               {filteredEvents
-                .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+                .sort(
+                  (a, b) =>
+                    new Date(b.date).getTime() - new Date(a.date).getTime()
+                )
                 .map((event) => {
-                  const eventType = eventTypes.find((type) => type.id === event.type)
-                  const IconComponent = eventType?.icon || FileText
-                  const isPast = new Date(event.date) < new Date()
+                  const eventType = eventTypes.find(
+                    (type) => type.id === event.type
+                  );
+                  const IconComponent = eventType?.icon || FileText;
+                  const isPast = new Date(event.date) < new Date();
 
                   return (
                     <div
@@ -492,12 +573,16 @@ export default function CalendarPage() {
                     >
                       <div className="flex items-center space-x-4">
                         <div className={`p-2 rounded-lg ${eventType?.bgColor}`}>
-                          <IconComponent className={`w-5 h-5 ${eventType?.textColor}`} />
+                          <IconComponent
+                            className={`w-5 h-5 ${eventType?.textColor}`}
+                          />
                         </div>
                         <div>
                           <h3 className="font-medium">{event.title}</h3>
                           <div className="flex items-center space-x-2 text-sm text-gray-600">
-                            <span>{new Date(event.date).toLocaleDateString("tr-TR")}</span>
+                            <span>
+                              {new Date(event.date).toLocaleDateString("tr-TR")}
+                            </span>
                             <span>•</span>
                             <Clock className="w-4 h-4" />
                             <span>{event.time}</span>
@@ -513,7 +598,9 @@ export default function CalendarPage() {
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className={`px-2 py-1 rounded text-xs ${eventType?.bgColor} ${eventType?.textColor}`}>
+                        <span
+                          className={`px-2 py-1 rounded text-xs ${eventType?.bgColor} ${eventType?.textColor}`}
+                        >
                           {eventType?.name}
                         </span>
                         {event.reminder && (
@@ -528,7 +615,7 @@ export default function CalendarPage() {
                         )}
                       </div>
                     </div>
-                  )
+                  );
                 })}
             </div>
           </CardContent>
@@ -543,9 +630,11 @@ export default function CalendarPage() {
               <DialogHeader>
                 <DialogTitle className="flex items-center space-x-2">
                   {(() => {
-                    const eventType = eventTypes.find((type) => type.id === selectedEvent.type)
-                    const IconComponent = eventType?.icon || FileText
-                    return <IconComponent className="w-5 h-5" />
+                    const eventType = eventTypes.find(
+                      (type) => type.id === selectedEvent.type
+                    );
+                    const IconComponent = eventType?.icon || FileText;
+                    return <IconComponent className="w-5 h-5" />;
                   })()}
                   <span>{selectedEvent.title}</span>
                 </DialogTitle>
@@ -554,21 +643,31 @@ export default function CalendarPage() {
               <div className="space-y-4 py-4">
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-1">
-                    <Label className="text-sm font-medium text-gray-600">Tarih</Label>
-                    <p className="text-sm">{new Date(selectedEvent.date).toLocaleDateString("tr-TR")}</p>
+                    <Label className="text-sm font-medium text-gray-600">
+                      Tarih
+                    </Label>
+                    <p className="text-sm">
+                      {new Date(selectedEvent.date).toLocaleDateString("tr-TR")}
+                    </p>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-sm font-medium text-gray-600">Saat</Label>
+                    <Label className="text-sm font-medium text-gray-600">
+                      Saat
+                    </Label>
                     <p className="text-sm">{selectedEvent.time}</p>
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-sm font-medium text-gray-600">Çocuk</Label>
+                    <Label className="text-sm font-medium text-gray-600">
+                      Çocuk
+                    </Label>
                     <p className="text-sm">{selectedEvent.child}</p>
                   </div>
                 </div>
                 {selectedEvent.location && (
                   <div className="space-y-1">
-                    <Label className="text-sm font-medium text-gray-600">Konum</Label>
+                    <Label className="text-sm font-medium text-gray-600">
+                      Konum
+                    </Label>
                     <p className="text-sm flex items-center space-x-1">
                       <MapPin className="w-4 h-4" />
                       <span>{selectedEvent.location}</span>
@@ -576,13 +675,24 @@ export default function CalendarPage() {
                   </div>
                 )}
                 <div className="space-y-1">
-                  <Label className="text-sm font-medium text-gray-600">Tür</Label>
-                  <p className="text-sm">{eventTypes.find((type) => type.id === selectedEvent.type)?.name}</p>
+                  <Label className="text-sm font-medium text-gray-600">
+                    Tür
+                  </Label>
+                  <p className="text-sm">
+                    {
+                      eventTypes.find((type) => type.id === selectedEvent.type)
+                        ?.name
+                    }
+                  </p>
                 </div>
                 {selectedEvent.description && (
                   <div className="space-y-1">
-                    <Label className="text-sm font-medium text-gray-600">Açıklama</Label>
-                    <p className="text-sm text-gray-700">{selectedEvent.description}</p>
+                    <Label className="text-sm font-medium text-gray-600">
+                      Açıklama
+                    </Label>
+                    <p className="text-sm text-gray-700">
+                      {selectedEvent.description}
+                    </p>
                   </div>
                 )}
                 {selectedEvent.reminder && (
@@ -615,5 +725,5 @@ export default function CalendarPage() {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

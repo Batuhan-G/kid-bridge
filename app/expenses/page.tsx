@@ -1,14 +1,20 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
   DialogContent,
@@ -17,7 +23,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   PieChart,
   Plus,
@@ -34,36 +40,36 @@ import {
   Filter,
   ArrowLeft,
   Calendar,
-} from "lucide-react"
-import { ChildSelector } from "@/components/child-selector"
-import { Sidebar } from "@/components/sidebar"
-import { SidebarTrigger } from "@/components/sidebar-trigger"
-import Link from "next/link"
+} from "lucide-react";
+import { ChildSelector } from "@/components/child-selector/child-selector";
+import { SidebarTrigger } from "@/components/sidebar-trigger/sidebar-trigger";
+import { Sidebar } from "@/components/sidebar/sidebar";
+import Link from "next/link";
 
 interface Expense {
-  id: number
-  title: string
-  amount: number
-  category: string
-  date: string
-  child: string
-  responsible: string
-  description?: string
+  id: number;
+  title: string;
+  amount: number;
+  category: string;
+  date: string;
+  child: string;
+  responsible: string;
+  description?: string;
 }
 
 export default function ExpensesPage() {
-  const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false)
-  const [selectedChild, setSelectedChild] = useState<any>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const [successMessage, setSuccessMessage] = useState("")
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
-  const [currentUser] = useState("Anne") // Simulated current user
+  const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
+  const [selectedChild, setSelectedChild] = useState<any>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [currentUser] = useState("Anne"); // Simulated current user
 
   const children = [
     { id: 1, name: "Elif", age: 8, avatar: "E", school: "Atatürk İlkokulu" },
     { id: 2, name: "Can", age: 12, avatar: "C", school: "Gazi Ortaokulu" },
     { id: 3, name: "Zeynep", age: 6, avatar: "Z", school: "Anaokulu" },
-  ]
+  ];
 
   const [expenses, setExpenses] = useState<Expense[]>([
     {
@@ -106,7 +112,7 @@ export default function ExpensesPage() {
       responsible: "Baba",
       description: "Kış kıyafetleri",
     },
-  ])
+  ]);
 
   const expenseCategories = [
     { id: "eğitim", name: "Eğitim", icon: GraduationCap, color: "bg-blue-500" },
@@ -115,19 +121,19 @@ export default function ExpensesPage() {
     { id: "ulaşım", name: "Ulaşım", icon: Car, color: "bg-yellow-500" },
     { id: "barınma", name: "Barınma", icon: Home, color: "bg-purple-500" },
     { id: "eğlence", name: "Eğlence", icon: Gamepad2, color: "bg-pink-500" },
-  ]
+  ];
 
   const totalStats = {
     events: children.reduce((sum) => sum + 2, 0),
     messages: children.reduce((sum) => sum + 1, 0),
     expenses: children.reduce((sum) => sum + 800, 0),
-  }
+  };
 
   const handleAddExpense = async (formData: FormData) => {
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
     // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    await new Promise((resolve) => setTimeout(resolve, 1000));
 
     const newExpense: Expense = {
       id: expenses.length + 1,
@@ -138,53 +144,58 @@ export default function ExpensesPage() {
       child: formData.get("child") as string,
       responsible: currentUser,
       description: formData.get("description") as string,
-    }
+    };
 
-    setExpenses([...expenses, newExpense])
-    setIsAddExpenseOpen(false)
-    setIsSubmitting(false)
-    setSuccessMessage("Harcama başarıyla eklendi!")
+    setExpenses([...expenses, newExpense]);
+    setIsAddExpenseOpen(false);
+    setIsSubmitting(false);
+    setSuccessMessage("Harcama başarıyla eklendi!");
 
     // Clear success message after 3 seconds
-    setTimeout(() => setSuccessMessage(""), 3000)
-  }
+    setTimeout(() => setSuccessMessage(""), 3000);
+  };
 
   const handleDeleteExpense = (expenseId: number) => {
-    const expense = expenses.find((e) => e.id === expenseId)
+    const expense = expenses.find((e) => e.id === expenseId);
 
     // Only allow deletion if current user is responsible for the expense
     if (expense && expense.responsible === currentUser) {
-      setExpenses(expenses.filter((e) => e.id !== expenseId))
+      setExpenses(expenses.filter((e) => e.id !== expenseId));
     }
-  }
+  };
 
   const canDeleteExpense = (expense: Expense) => {
-    return expense.responsible === currentUser
-  }
+    return expense.responsible === currentUser;
+  };
 
-  const filteredExpenses = selectedChild ? expenses.filter((expense) => expense.child === selectedChild.name) : expenses
+  const filteredExpenses = selectedChild
+    ? expenses.filter((expense) => expense.child === selectedChild.name)
+    : expenses;
 
   const calculateStats = (expenseList: Expense[]) => {
-    const total = expenseList.reduce((sum, expense) => sum + expense.amount, 0)
+    const total = expenseList.reduce((sum, expense) => sum + expense.amount, 0);
     const thisMonth = expenseList
-      .filter((expense) => new Date(expense.date).getMonth() === new Date().getMonth())
-      .reduce((sum, expense) => sum + expense.amount, 0)
+      .filter(
+        (expense) => new Date(expense.date).getMonth() === new Date().getMonth()
+      )
+      .reduce((sum, expense) => sum + expense.amount, 0);
 
     const lastMonth = expenseList
       .filter((expense) => {
-        const expenseDate = new Date(expense.date)
-        const lastMonthDate = new Date()
-        lastMonthDate.setMonth(lastMonthDate.getMonth() - 1)
-        return expenseDate.getMonth() === lastMonthDate.getMonth()
+        const expenseDate = new Date(expense.date);
+        const lastMonthDate = new Date();
+        lastMonthDate.setMonth(lastMonthDate.getMonth() - 1);
+        return expenseDate.getMonth() === lastMonthDate.getMonth();
       })
-      .reduce((sum, expense) => sum + expense.amount, 0)
+      .reduce((sum, expense) => sum + expense.amount, 0);
 
-    const change = lastMonth > 0 ? ((thisMonth - lastMonth) / lastMonth) * 100 : 0
+    const change =
+      lastMonth > 0 ? ((thisMonth - lastMonth) / lastMonth) * 100 : 0;
 
-    return { total, thisMonth, change }
-  }
+    return { total, thisMonth, change };
+  };
 
-  const stats = calculateStats(filteredExpenses)
+  const stats = calculateStats(filteredExpenses);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -204,11 +215,16 @@ export default function ExpensesPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               {/* Sidebar Trigger */}
-              <SidebarTrigger onToggle={() => setIsSidebarOpen(!isSidebarOpen)} totalStats={totalStats} />
+              <SidebarTrigger
+                onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+                totalStats={totalStats}
+              />
 
               <div className="flex items-center space-x-2">
                 <PieChart className="w-6 h-6 text-indigo-600" />
-                <h1 className="text-xl font-bold text-gray-900">Harcama Takibi</h1>
+                <h1 className="text-xl font-bold text-gray-900">
+                  Harcama Takibi
+                </h1>
               </div>
             </div>
 
@@ -219,7 +235,10 @@ export default function ExpensesPage() {
                 onChildChange={setSelectedChild}
               />
 
-              <Dialog open={isAddExpenseOpen} onOpenChange={setIsAddExpenseOpen}>
+              <Dialog
+                open={isAddExpenseOpen}
+                onOpenChange={setIsAddExpenseOpen}
+              >
                 <DialogTrigger asChild>
                   <Button>
                     <Plus className="w-4 h-4 mr-2" />
@@ -229,27 +248,41 @@ export default function ExpensesPage() {
                 <DialogContent className="sm:max-w-[500px]">
                   <form
                     onSubmit={(e) => {
-                      e.preventDefault()
-                      const formData = new FormData(e.currentTarget)
-                      handleAddExpense(formData)
+                      e.preventDefault();
+                      const formData = new FormData(e.currentTarget);
+                      handleAddExpense(formData);
                     }}
                   >
                     <DialogHeader>
                       <DialogTitle>Yeni Harcama Ekle</DialogTitle>
-                      <DialogDescription>Çocuğunuz için yeni bir harcama kaydı oluşturun</DialogDescription>
+                      <DialogDescription>
+                        Çocuğunuz için yeni bir harcama kaydı oluşturun
+                      </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                       <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="title" className="text-right">
                           Başlık
                         </Label>
-                        <Input id="title" name="title" className="col-span-3" required />
+                        <Input
+                          id="title"
+                          name="title"
+                          className="col-span-3"
+                          required
+                        />
                       </div>
                       <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="amount" className="text-right">
                           Tutar (₺)
                         </Label>
-                        <Input id="amount" name="amount" type="number" step="0.01" className="col-span-3" required />
+                        <Input
+                          id="amount"
+                          name="amount"
+                          type="number"
+                          step="0.01"
+                          className="col-span-3"
+                          required
+                        />
                       </div>
                       <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="child" className="text-right">
@@ -292,13 +325,23 @@ export default function ExpensesPage() {
                         <Label htmlFor="date" className="text-right">
                           Tarih
                         </Label>
-                        <Input id="date" name="date" type="date" className="col-span-3" required />
+                        <Input
+                          id="date"
+                          name="date"
+                          type="date"
+                          className="col-span-3"
+                          required
+                        />
                       </div>
                       <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="description" className="text-right">
                           Açıklama
                         </Label>
-                        <Textarea id="description" name="description" className="col-span-3" />
+                        <Textarea
+                          id="description"
+                          name="description"
+                          className="col-span-3"
+                        />
                       </div>
                     </div>
                     <DialogFooter>
@@ -323,7 +366,10 @@ export default function ExpensesPage() {
 
           {/* Breadcrumb */}
           <div className="mt-4 flex items-center space-x-4 text-sm text-gray-600">
-            <Link href="/dashboard" className="flex items-center space-x-2 hover:text-gray-900">
+            <Link
+              href="/dashboard"
+              className="flex items-center space-x-2 hover:text-gray-900"
+            >
               <ArrowLeft className="w-4 h-4" />
               <span>Dashboard</span>
             </Link>
@@ -356,11 +402,15 @@ export default function ExpensesPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Toplam Harcama</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Toplam Harcama
+              </CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">₺{stats.total.toLocaleString()}</div>
+              <div className="text-2xl font-bold">
+                ₺{stats.total.toLocaleString()}
+              </div>
               <p className="text-xs text-muted-foreground">Tüm zamanlar</p>
             </CardContent>
           </Card>
@@ -370,7 +420,9 @@ export default function ExpensesPage() {
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">₺{stats.thisMonth.toLocaleString()}</div>
+              <div className="text-2xl font-bold">
+                ₺{stats.thisMonth.toLocaleString()}
+              </div>
               <p className="text-xs text-muted-foreground">
                 {stats.change > 0 ? "+" : ""}
                 {stats.change.toFixed(1)}% geçen aya göre
@@ -384,7 +436,10 @@ export default function ExpensesPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                ₺{filteredExpenses.length > 0 ? (stats.total / filteredExpenses.length).toFixed(0) : 0}
+                ₺
+                {filteredExpenses.length > 0
+                  ? (stats.total / filteredExpenses.length).toFixed(0)
+                  : 0}
               </div>
               <p className="text-xs text-muted-foreground">Harcama başına</p>
             </CardContent>
@@ -398,7 +453,9 @@ export default function ExpensesPage() {
               <CardTitle>
                 Harcama Listesi
                 {selectedChild && (
-                  <span className="text-sm font-normal text-gray-600 ml-2">- {selectedChild.name}</span>
+                  <span className="text-sm font-normal text-gray-600 ml-2">
+                    - {selectedChild.name}
+                  </span>
                 )}
               </CardTitle>
               <div className="flex items-center space-x-2">
@@ -420,19 +477,32 @@ export default function ExpensesPage() {
 
               <TabsContent value="all" className="space-y-4 mt-4">
                 {filteredExpenses.map((expense) => {
-                  const category = expenseCategories.find((cat) => cat.id === expense.category)
-                  const IconComponent = category?.icon || ShoppingCart
+                  const category = expenseCategories.find(
+                    (cat) => cat.id === expense.category
+                  );
+                  const IconComponent = category?.icon || ShoppingCart;
 
                   return (
-                    <div key={expense.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div
+                      key={expense.id}
+                      className="flex items-center justify-between p-4 border rounded-lg"
+                    >
                       <div className="flex items-center space-x-4">
-                        <div className={`p-2 rounded-lg ${category?.color || "bg-gray-500"} bg-opacity-10`}>
+                        <div
+                          className={`p-2 rounded-lg ${
+                            category?.color || "bg-gray-500"
+                          } bg-opacity-10`}
+                        >
                           <IconComponent className="w-5 h-5" />
                         </div>
                         <div>
                           <h3 className="font-medium">{expense.title}</h3>
                           <div className="flex items-center space-x-2 text-sm text-gray-600">
-                            <span>{new Date(expense.date).toLocaleDateString("tr-TR")}</span>
+                            <span>
+                              {new Date(expense.date).toLocaleDateString(
+                                "tr-TR"
+                              )}
+                            </span>
                             <span>•</span>
                             <span>{expense.child}</span>
                             <span>•</span>
@@ -440,13 +510,21 @@ export default function ExpensesPage() {
                               {expense.responsible}
                             </Badge>
                           </div>
-                          {expense.description && <p className="text-sm text-gray-500 mt-1">{expense.description}</p>}
+                          {expense.description && (
+                            <p className="text-sm text-gray-500 mt-1">
+                              {expense.description}
+                            </p>
+                          )}
                         </div>
                       </div>
                       <div className="flex items-center space-x-3">
                         <div className="text-right">
-                          <div className="font-bold text-lg">₺{expense.amount.toLocaleString()}</div>
-                          <div className="text-sm text-gray-500">{category?.name}</div>
+                          <div className="font-bold text-lg">
+                            ₺{expense.amount.toLocaleString()}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {category?.name}
+                          </div>
                         </div>
                         {canDeleteExpense(expense) && (
                           <Button
@@ -460,27 +538,40 @@ export default function ExpensesPage() {
                         )}
                       </div>
                     </div>
-                  )
+                  );
                 })}
               </TabsContent>
 
               {expenseCategories.slice(0, 3).map((category) => (
-                <TabsContent key={category.id} value={category.id} className="space-y-4 mt-4">
+                <TabsContent
+                  key={category.id}
+                  value={category.id}
+                  className="space-y-4 mt-4"
+                >
                   {filteredExpenses
                     .filter((expense) => expense.category === category.id)
                     .map((expense) => {
-                      const IconComponent = category.icon
+                      const IconComponent = category.icon;
 
                       return (
-                        <div key={expense.id} className="flex items-center justify-between p-4 border rounded-lg">
+                        <div
+                          key={expense.id}
+                          className="flex items-center justify-between p-4 border rounded-lg"
+                        >
                           <div className="flex items-center space-x-4">
-                            <div className={`p-2 rounded-lg ${category.color} bg-opacity-10`}>
+                            <div
+                              className={`p-2 rounded-lg ${category.color} bg-opacity-10`}
+                            >
                               <IconComponent className="w-5 h-5" />
                             </div>
                             <div>
                               <h3 className="font-medium">{expense.title}</h3>
                               <div className="flex items-center space-x-2 text-sm text-gray-600">
-                                <span>{new Date(expense.date).toLocaleDateString("tr-TR")}</span>
+                                <span>
+                                  {new Date(expense.date).toLocaleDateString(
+                                    "tr-TR"
+                                  )}
+                                </span>
                                 <span>•</span>
                                 <span>{expense.child}</span>
                                 <span>•</span>
@@ -489,14 +580,20 @@ export default function ExpensesPage() {
                                 </Badge>
                               </div>
                               {expense.description && (
-                                <p className="text-sm text-gray-500 mt-1">{expense.description}</p>
+                                <p className="text-sm text-gray-500 mt-1">
+                                  {expense.description}
+                                </p>
                               )}
                             </div>
                           </div>
                           <div className="flex items-center space-x-3">
                             <div className="text-right">
-                              <div className="font-bold text-lg">₺{expense.amount.toLocaleString()}</div>
-                              <div className="text-sm text-gray-500">{category.name}</div>
+                              <div className="font-bold text-lg">
+                                ₺{expense.amount.toLocaleString()}
+                              </div>
+                              <div className="text-sm text-gray-500">
+                                {category.name}
+                              </div>
                             </div>
                             {canDeleteExpense(expense) && (
                               <Button
@@ -510,28 +607,44 @@ export default function ExpensesPage() {
                             )}
                           </div>
                         </div>
-                      )
+                      );
                     })}
                 </TabsContent>
               ))}
 
               <TabsContent value="diğer" className="space-y-4 mt-4">
                 {filteredExpenses
-                  .filter((expense) => !["eğitim", "sağlık"].includes(expense.category))
+                  .filter(
+                    (expense) =>
+                      !["eğitim", "sağlık"].includes(expense.category)
+                  )
                   .map((expense) => {
-                    const category = expenseCategories.find((cat) => cat.id === expense.category)
-                    const IconComponent = category?.icon || ShoppingCart
+                    const category = expenseCategories.find(
+                      (cat) => cat.id === expense.category
+                    );
+                    const IconComponent = category?.icon || ShoppingCart;
 
                     return (
-                      <div key={expense.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div
+                        key={expense.id}
+                        className="flex items-center justify-between p-4 border rounded-lg"
+                      >
                         <div className="flex items-center space-x-4">
-                          <div className={`p-2 rounded-lg ${category?.color || "bg-gray-500"} bg-opacity-10`}>
+                          <div
+                            className={`p-2 rounded-lg ${
+                              category?.color || "bg-gray-500"
+                            } bg-opacity-10`}
+                          >
                             <IconComponent className="w-5 h-5" />
                           </div>
                           <div>
                             <h3 className="font-medium">{expense.title}</h3>
                             <div className="flex items-center space-x-2 text-sm text-gray-600">
-                              <span>{new Date(expense.date).toLocaleDateString("tr-TR")}</span>
+                              <span>
+                                {new Date(expense.date).toLocaleDateString(
+                                  "tr-TR"
+                                )}
+                              </span>
                               <span>•</span>
                               <span>{expense.child}</span>
                               <span>•</span>
@@ -539,13 +652,21 @@ export default function ExpensesPage() {
                                 {expense.responsible}
                               </Badge>
                             </div>
-                            {expense.description && <p className="text-sm text-gray-500 mt-1">{expense.description}</p>}
+                            {expense.description && (
+                              <p className="text-sm text-gray-500 mt-1">
+                                {expense.description}
+                              </p>
+                            )}
                           </div>
                         </div>
                         <div className="flex items-center space-x-3">
                           <div className="text-right">
-                            <div className="font-bold text-lg">₺{expense.amount.toLocaleString()}</div>
-                            <div className="text-sm text-gray-500">{category?.name}</div>
+                            <div className="font-bold text-lg">
+                              ₺{expense.amount.toLocaleString()}
+                            </div>
+                            <div className="text-sm text-gray-500">
+                              {category?.name}
+                            </div>
                           </div>
                           {canDeleteExpense(expense) && (
                             <Button
@@ -559,7 +680,7 @@ export default function ExpensesPage() {
                           )}
                         </div>
                       </div>
-                    )
+                    );
                   })}
               </TabsContent>
             </Tabs>
@@ -567,5 +688,5 @@ export default function ExpensesPage() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

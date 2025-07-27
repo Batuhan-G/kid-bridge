@@ -1,12 +1,25 @@
-"use client"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { MultiChildStats } from "@/components/multi-child-stats"
-import { Calendar, MessageCircle, Users, PieChart, ArrowLeft, TrendingUp } from "lucide-react"
-import Link from "next/link"
+"use client";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MultiChildStats } from "@/components/multi-child-stats/multi-child-stats";
+import {
+  Calendar,
+  MessageCircle,
+  Users,
+  PieChart,
+  ArrowLeft,
+  TrendingUp,
+} from "lucide-react";
+import Link from "next/link";
 
 export default function MultiChildDashboard() {
   const children = [
@@ -46,7 +59,7 @@ export default function MultiChildDashboard() {
         lastActivity: "1 gün önce",
       },
     },
-  ]
+  ];
 
   const recentActivities = [
     {
@@ -76,13 +89,13 @@ export default function MultiChildDashboard() {
       time: "5 saat önce",
       icon: PieChart,
     },
-  ]
+  ];
 
   const weeklyComparison = [
     { child: "Elif", thisWeek: 5, lastWeek: 3, change: "+2" },
     { child: "Can", thisWeek: 4, lastWeek: 6, change: "-2" },
     { child: "Zeynep", thisWeek: 2, lastWeek: 2, change: "0" },
-  ]
+  ];
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -99,7 +112,9 @@ export default function MultiChildDashboard() {
               </Link>
               <div className="flex items-center space-x-2">
                 <Users className="w-6 h-6 text-indigo-600" />
-                <h1 className="text-xl font-bold text-gray-900">Çoklu Çocuk Görünümü</h1>
+                <h1 className="text-xl font-bold text-gray-900">
+                  Çoklu Çocuk Görünümü
+                </h1>
               </div>
             </div>
             <Badge variant="secondary" className="px-3 py-1">
@@ -112,8 +127,12 @@ export default function MultiChildDashboard() {
       <div className="container mx-auto px-4 py-8">
         {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Tüm Çocuklarınız İçin Özet</h1>
-          <p className="text-gray-600">Elif, Can ve Zeynep için güncel durum ve aktiviteler</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Tüm Çocuklarınız İçin Özet
+          </h1>
+          <p className="text-gray-600">
+            Elif, Can ve Zeynep için güncel durum ve aktiviteler
+          </p>
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
@@ -133,28 +152,37 @@ export default function MultiChildDashboard() {
               <Card>
                 <CardHeader>
                   <CardTitle>Son Aktiviteler</CardTitle>
-                  <CardDescription>Tüm çocuklar için son hareketler</CardDescription>
+                  <CardDescription>
+                    Tüm çocuklar için son hareketler
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     {recentActivities.map((activity) => {
-                      const IconComponent = activity.icon
+                      const IconComponent = activity.icon;
                       return (
-                        <div key={activity.id} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
+                        <div
+                          key={activity.id}
+                          className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg"
+                        >
                           <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
                             <IconComponent className="w-5 h-5 text-indigo-600" />
                           </div>
                           <div className="flex-1">
                             <div className="flex items-center space-x-2 mb-1">
-                              <span className="font-medium">{activity.title}</span>
+                              <span className="font-medium">
+                                {activity.title}
+                              </span>
                               <Badge variant="outline" className="text-xs">
                                 {activity.child}
                               </Badge>
                             </div>
-                            <p className="text-sm text-gray-600">{activity.time}</p>
+                            <p className="text-sm text-gray-600">
+                              {activity.time}
+                            </p>
                           </div>
                         </div>
-                      )
+                      );
                     })}
                   </div>
                 </CardContent>
@@ -163,7 +191,9 @@ export default function MultiChildDashboard() {
               <Card>
                 <CardHeader>
                   <CardTitle>Bugünkü Etkinlikler</CardTitle>
-                  <CardDescription>Tüm çocuklar için bugün planlanmış</CardDescription>
+                  <CardDescription>
+                    Tüm çocuklar için bugün planlanmış
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
@@ -179,14 +209,18 @@ export default function MultiChildDashboard() {
                         <p className="font-medium">Basketbol Antrenmanı</p>
                         <p className="text-sm text-gray-600">16:00 - Can</p>
                       </div>
-                      <Badge className="bg-green-100 text-green-800">Spor</Badge>
+                      <Badge className="bg-green-100 text-green-800">
+                        Spor
+                      </Badge>
                     </div>
                     <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
                       <div>
                         <p className="font-medium">Oyun Saati</p>
                         <p className="text-sm text-gray-600">15:30 - Zeynep</p>
                       </div>
-                      <Badge className="bg-yellow-100 text-yellow-800">Sosyal</Badge>
+                      <Badge className="bg-yellow-100 text-yellow-800">
+                        Sosyal
+                      </Badge>
                     </div>
                   </div>
                 </CardContent>
@@ -204,10 +238,15 @@ export default function MultiChildDashboard() {
                 <CardContent>
                   <div className="space-y-4">
                     {weeklyComparison.map((item, index) => (
-                      <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                      <div
+                        key={index}
+                        className="flex items-center justify-between p-4 bg-gray-50 rounded-lg"
+                      >
                         <div className="flex items-center space-x-3">
                           <Avatar>
-                            <AvatarFallback className="bg-indigo-600 text-white">{item.child[0]}</AvatarFallback>
+                            <AvatarFallback className="bg-indigo-600 text-white">
+                              {item.child[0]}
+                            </AvatarFallback>
                           </Avatar>
                           <span className="font-medium">{item.child}</span>
                         </div>
@@ -227,8 +266,8 @@ export default function MultiChildDashboard() {
                                 item.change.startsWith("+")
                                   ? "text-green-600"
                                   : item.change.startsWith("-")
-                                    ? "text-red-600"
-                                    : "text-gray-600"
+                                  ? "text-red-600"
+                                  : "text-gray-600"
                               }`}
                             >
                               {item.change}
@@ -244,13 +283,21 @@ export default function MultiChildDashboard() {
               <Card>
                 <CardHeader>
                   <CardTitle>Aylık Harcama Dağılımı</CardTitle>
-                  <CardDescription>Çocuk başına harcama oranları</CardDescription>
+                  <CardDescription>
+                    Çocuk başına harcama oranları
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     {children.map((child) => {
-                      const totalExpenses = children.reduce((sum, c) => sum + c.stats.monthlyExpenses, 0)
-                      const percentage = ((child.stats.monthlyExpenses / totalExpenses) * 100).toFixed(1)
+                      const totalExpenses = children.reduce(
+                        (sum, c) => sum + c.stats.monthlyExpenses,
+                        0
+                      );
+                      const percentage = (
+                        (child.stats.monthlyExpenses / totalExpenses) *
+                        100
+                      ).toFixed(1);
 
                       return (
                         <div key={child.id} className="space-y-2">
@@ -264,15 +311,22 @@ export default function MultiChildDashboard() {
                               <span className="font-medium">{child.name}</span>
                             </div>
                             <div className="text-right">
-                              <p className="font-bold">₺{child.stats.monthlyExpenses}</p>
-                              <p className="text-xs text-gray-600">%{percentage}</p>
+                              <p className="font-bold">
+                                ₺{child.stats.monthlyExpenses}
+                              </p>
+                              <p className="text-xs text-gray-600">
+                                %{percentage}
+                              </p>
                             </div>
                           </div>
                           <div className="w-full bg-gray-200 rounded-full h-2">
-                            <div className="h-2 rounded-full bg-indigo-600" style={{ width: `${percentage}%` }}></div>
+                            <div
+                              className="h-2 rounded-full bg-indigo-600"
+                              style={{ width: `${percentage}%` }}
+                            ></div>
                           </div>
                         </div>
-                      )
+                      );
                     })}
                   </div>
                 </CardContent>
@@ -285,27 +339,37 @@ export default function MultiChildDashboard() {
               <Card>
                 <CardHeader>
                   <CardTitle>AI Öngörüler</CardTitle>
-                  <CardDescription>Çocuklarınız için akıllı öneriler</CardDescription>
+                  <CardDescription>
+                    Çocuklarınız için akıllı öneriler
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
                     <div className="p-4 bg-blue-50 rounded-lg">
-                      <h4 className="font-medium text-blue-900 mb-2">Elif için Öneri</h4>
+                      <h4 className="font-medium text-blue-900 mb-2">
+                        Elif için Öneri
+                      </h4>
                       <p className="text-sm text-blue-800">
-                        Matematik notlarındaki gelişim devam ediyor. Bu ay 2 ek çalışma seansı planlanabilir.
+                        Matematik notlarındaki gelişim devam ediyor. Bu ay 2 ek
+                        çalışma seansı planlanabilir.
                       </p>
                     </div>
                     <div className="p-4 bg-green-50 rounded-lg">
-                      <h4 className="font-medium text-green-900 mb-2">Can için Öneri</h4>
+                      <h4 className="font-medium text-green-900 mb-2">
+                        Can için Öneri
+                      </h4>
                       <p className="text-sm text-green-800">
-                        Spor aktivitelerindeki başarısı akademik motivasyonunu da artırıyor. Dengeli program
-                        sürdürülmeli.
+                        Spor aktivitelerindeki başarısı akademik motivasyonunu
+                        da artırıyor. Dengeli program sürdürülmeli.
                       </p>
                     </div>
                     <div className="p-4 bg-yellow-50 rounded-lg">
-                      <h4 className="font-medium text-yellow-900 mb-2">Zeynep için Öneri</h4>
+                      <h4 className="font-medium text-yellow-900 mb-2">
+                        Zeynep için Öneri
+                      </h4>
                       <p className="text-sm text-yellow-800">
-                        Sosyal gelişimi çok iyi. Yaratıcı aktiviteler eklenebilir.
+                        Sosyal gelişimi çok iyi. Yaratıcı aktiviteler
+                        eklenebilir.
                       </p>
                     </div>
                   </div>
@@ -342,7 +406,9 @@ export default function MultiChildDashboard() {
                     <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div>
                         <p className="font-medium">Planlama Verimliliği</p>
-                        <p className="text-sm text-gray-600">Etkinlik başarı oranı</p>
+                        <p className="text-sm text-gray-600">
+                          Etkinlik başarı oranı
+                        </p>
                       </div>
                       <div className="flex items-center space-x-2">
                         <TrendingUp className="w-4 h-4 text-green-600" />
@@ -357,5 +423,5 @@ export default function MultiChildDashboard() {
         </Tabs>
       </div>
     </div>
-  )
+  );
 }
