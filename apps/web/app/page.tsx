@@ -1,7 +1,13 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Calendar, MessageCircle, Users, PieChart, Brain, Shield } from "lucide-react"
-import Link from "next/link"
+import { Card, CardDescription, CardHeader } from "@/components/ui/card";
+import {
+  Calendar,
+  MessageCircle,
+  Users,
+  PieChart,
+  Brain,
+  Shield,
+} from "lucide-react";
+import Link from "next/link";
 
 export default function LandingPage() {
   return (
@@ -29,11 +35,13 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-16 text-center">
         <h1 className="text-5xl font-bold text-gray-900 mb-6">
-          Çocuklarınız İçin <span className="text-indigo-600">Ortak Gelecek</span>
+          Çocuklarınız İçin{" "}
+          <span className="text-indigo-600">Ortak Gelecek</span>
         </h1>
         <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-          Boşanmış ebeveynler için geliştirilmiş platform ile çocuklarınızla ilgili sorumlulukları, etkinlikleri ve
-          iletişimi sağlıklı bir şekilde yönetin.
+          Boşanmış ebeveynler için geliştirilmiş platform ile çocuklarınızla
+          ilgili sorumlulukları, etkinlikleri ve iletişimi sağlıklı bir şekilde
+          yönetin.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link href="/register">
@@ -42,7 +50,11 @@ export default function LandingPage() {
             </Button>
           </Link>
           <Link href="/demo">
-            <Button variant="outline" size="lg" className="px-8 py-3 bg-transparent">
+            <Button
+              variant="outline"
+              size="lg"
+              className="px-8 py-3 bg-transparent"
+            >
               Demo İzle
             </Button>
           </Link>
@@ -51,13 +63,18 @@ export default function LandingPage() {
 
       {/* Features */}
       <section className="container mx-auto px-4 py-16">
-        <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">Neden OrtakEv?</h2>
+        <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
+          Neden OrtakEv?
+        </h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           <Card className="text-center">
             <CardHeader>
               <Calendar className="w-12 h-12 text-indigo-600 mx-auto mb-4" />
               <CardTitle>Ortak Takvim</CardTitle>
-              <CardDescription>Çocuğunuzun okul, sağlık ve sosyal etkinliklerini tek yerden planlayın</CardDescription>
+              <CardDescription>
+                Çocuğunuzun okul, sağlık ve sosyal etkinliklerini tek yerden
+                planlayın
+              </CardDescription>
             </CardHeader>
           </Card>
 
@@ -65,7 +82,9 @@ export default function LandingPage() {
             <CardHeader>
               <MessageCircle className="w-12 h-12 text-indigo-600 mx-auto mb-4" />
               <CardTitle>Güvenli Mesajlaşma</CardTitle>
-              <CardDescription>AI destekli iletişim önerileri ile sağlıklı diyalog kurun</CardDescription>
+              <CardDescription>
+                AI destekli iletişim önerileri ile sağlıklı diyalog kurun
+              </CardDescription>
             </CardHeader>
           </Card>
 
@@ -73,7 +92,9 @@ export default function LandingPage() {
             <CardHeader>
               <PieChart className="w-12 h-12 text-indigo-600 mx-auto mb-4" />
               <CardTitle>Harcama Takibi</CardTitle>
-              <CardDescription>Çocuğunuzla ilgili giderleri şeffaf bir şekilde paylaşın</CardDescription>
+              <CardDescription>
+                Çocuğunuzla ilgili giderleri şeffaf bir şekilde paylaşın
+              </CardDescription>
             </CardHeader>
           </Card>
 
@@ -81,7 +102,9 @@ export default function LandingPage() {
             <CardHeader>
               <Users className="w-12 h-12 text-indigo-600 mx-auto mb-4" />
               <CardTitle>Çocuk Profili</CardTitle>
-              <CardDescription>Gelişim notları, fotoğraflar ve önemli belgeleri saklayın</CardDescription>
+              <CardDescription>
+                Gelişim notları, fotoğraflar ve önemli belgeleri saklayın
+              </CardDescription>
             </CardHeader>
           </Card>
 
@@ -89,7 +112,9 @@ export default function LandingPage() {
             <CardHeader>
               <Brain className="w-12 h-12 text-indigo-600 mx-auto mb-4" />
               <CardTitle>AI Destekli</CardTitle>
-              <CardDescription>Yapay zeka ile çatışmaları azaltın ve planlamayı kolaylaştırın</CardDescription>
+              <CardDescription>
+                Yapay zeka ile çatışmaları azaltın ve planlamayı kolaylaştırın
+              </CardDescription>
             </CardHeader>
           </Card>
 
@@ -97,7 +122,9 @@ export default function LandingPage() {
             <CardHeader>
               <Shield className="w-12 h-12 text-indigo-600 mx-auto mb-4" />
               <CardTitle>Güvenli & Yasal</CardTitle>
-              <CardDescription>KVKK ve GDPR uyumlu, şifreli veri koruması</CardDescription>
+              <CardDescription>
+                KVKK ve GDPR uyumlu, şifreli veri koruması
+              </CardDescription>
             </CardHeader>
           </Card>
         </div>
@@ -106,9 +133,12 @@ export default function LandingPage() {
       {/* CTA Section */}
       <section className="bg-indigo-600 py-16">
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-3xl font-bold text-white mb-6">Çocuklarınız İçin Daha İyi Bir Gelecek Başlıyor</h2>
+          <h2 className="text-3xl font-bold text-white mb-6">
+            Çocuklarınız İçin Daha İyi Bir Gelecek Başlıyor
+          </h2>
           <p className="text-xl text-indigo-100 mb-8 max-w-2xl mx-auto">
-            Binlerce aile OrtakEv ile daha sağlıklı iletişim kuruyor. Siz de bu değişimin parçası olun.
+            Binlerce aile OrtakEv ile daha sağlıklı iletişim kuruyor. Siz de bu
+            değişimin parçası olun.
           </p>
           <Link href="/register">
             <Button size="lg" variant="secondary" className="px-8 py-3">
@@ -129,7 +159,9 @@ export default function LandingPage() {
                 </div>
                 <span className="text-xl font-bold">OrtakEv</span>
               </div>
-              <p className="text-gray-400">Çocuklar için daha iyi bir gelecek inşa ediyoruz.</p>
+              <p className="text-gray-400">
+                Çocuklar için daha iyi bir gelecek inşa ediyoruz.
+              </p>
             </div>
             <div>
               <h3 className="font-semibold mb-4">Ürün</h3>
@@ -180,5 +212,5 @@ export default function LandingPage() {
         </div>
       </footer>
     </div>
-  )
+  );
 }
