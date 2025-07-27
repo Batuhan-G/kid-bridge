@@ -1,8 +1,0 @@
-{
-  "/dashboard/page": "app/dashboard/page.js",
-  "/page": "app/page.js",
-  "/children/page": "app/children/page.js",
-  "/calendar/page": "app/calendar/page.js",
-  "/messages/page": "app/messages/page.js",
-  "/development/page": "app/development/page.js"
-}
