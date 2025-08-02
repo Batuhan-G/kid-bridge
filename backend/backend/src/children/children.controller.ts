@@ -1,13 +1,13 @@
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Body, 
-  Patch, 
-  Param, 
-  Delete, 
-  UseGuards, 
-  Request 
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
+  Delete,
+  UseGuards,
+  Request,
 } from '@nestjs/common';
 import { ChildrenService } from './children.service';
 import { CreateChildDto } from './dto/create-child.dto';
@@ -36,9 +36,9 @@ export class ChildrenController {
 
   @Patch(':id')
   update(
-    @Param('id') id: string, 
+    @Param('id') id: string,
     @Body() updateChildDto: UpdateChildDto,
-    @Request() req
+    @Request() req,
   ) {
     return this.childrenService.update(id, updateChildDto, req.user.id);
   }
@@ -52,7 +52,7 @@ export class ChildrenController {
   addParent(
     @Param('id') childId: string,
     @Body('email') parentEmail: string,
-    @Request() req
+    @Request() req,
   ) {
     return this.childrenService.addParent(childId, parentEmail, req.user.id);
   }

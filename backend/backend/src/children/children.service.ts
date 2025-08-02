@@ -1,4 +1,7 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateChildDto } from './dto/create-child.dto';
 import { UpdateChildDto } from './dto/update-child.dto';
@@ -121,8 +124,8 @@ export class ChildrenService {
       where: { id },
       data: {
         ...updateChildDto,
-        dateOfBirth: updateChildDto.dateOfBirth 
-          ? new Date(updateChildDto.dateOfBirth) 
+        dateOfBirth: updateChildDto.dateOfBirth
+          ? new Date(updateChildDto.dateOfBirth)
           : undefined,
       },
       include: {
@@ -151,7 +154,11 @@ export class ChildrenService {
     });
   }
 
-  async addParent(childId: string, parentEmail: string, requestingParentId: string) {
+  async addParent(
+    childId: string,
+    parentEmail: string,
+    requestingParentId: string,
+  ) {
     // Verify requesting parent has access to this child
     await this.findOne(childId, requestingParentId);
 

@@ -60,6 +60,15 @@ npm run start:prod
 - `DELETE /children/:id` - Çocuk profilini sil (soft delete)
 - `POST /children/:id/parents` - Çocuğa yeni ebeveyn ekle
 
+### Messaging System
+- `POST /messages` - Mesaj gönder
+- `GET /messages` - Mesajları listele (pagination, filters)
+- `GET /messages/:id` - Mesaj detaylarını getir
+- `PATCH /messages/:id` - Mesajı okundu olarak işaretle
+- `GET /messages/unread-count` - Okunmamış mesaj sayısı
+- `GET /messages/conversation/:otherUserId/:childId` - İki ebeveyn arası konuşma
+- `PATCH /messages/mark-all-read` - Tüm mesajları okundu işaretle
+
 ## Environment Variables
 
 ```bash
@@ -81,13 +90,13 @@ CORS_ORIGIN="http://localhost:3000"
 ## Database Schema
 
 Ana modeller:
-- **User**: Ebeveyn kullanıcıları
-- **Child**: Çocuk profilleri
-- **Message**: Ebeveynler arası mesajlar
-- **Expense**: Harcama kayıtları
-- **Activity**: Etkinlik planlaması
-- **Document**: Dosya/belge yönetimi
-- **Milestone**: Gelişim kilometre taşları
+- **User**: Ebeveyn kullanıcıları ✅
+- **Child**: Çocuk profilleri ✅
+- **Message**: Ebeveynler arası mesajlar ✅
+- **Expense**: Harcama kayıtları (Schema hazır)
+- **Activity**: Etkinlik planlaması (Schema hazır)
+- **Document**: Dosya/belge yönetimi (Schema hazır)
+- **Milestone**: Gelişim kilometre taşları (Schema hazır)
 
 ## Geliştirme
 
@@ -151,6 +160,11 @@ src/
 │   ├── children.controller.ts
 │   ├── children.service.ts
 │   └── children.module.ts
+├── messages/                # Mesajlaşma modülü
+│   ├── dto/                 # Veri transfer objeleri
+│   ├── messages.controller.ts
+│   ├── messages.service.ts
+│   └── messages.module.ts
 ├── prisma/                  # Veritabanı modülü
 │   ├── prisma.service.ts    # DB connection
 │   └── prisma.module.ts
@@ -264,6 +278,9 @@ chmod +x test-api.sh
 
 # Run tests (server must be running)
 ./test-api.sh
+
+# Test messaging system specifically
+./test-messaging.sh
 ```
 
 ### 🔧 Development Tips
