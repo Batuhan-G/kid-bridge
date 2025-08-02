@@ -1,0 +1,227 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+enum UserRole {
+  PARENT
+  ADMIN
+}
+
+enum MessageType {
+  GENERAL
+  URGENT
+  SCHEDULE
+  EXPENSE
+}
+
+enum ExpenseStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ExpenseCategory {
+  EDUCATION
+  HEALTH
+  CLOTHING
+  FOOD
+  ENTERTAINMENT
+  TRANSPORTATION
+  OTHER
+}
+
+enum ActivityType {
+  SCHOOL
+  HEALTH
+  SOCIAL
+  SPORTS
+  OTHER
+}
+
+enum ActivityStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  COMPLETED
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  password  String
+  firstName String
+  lastName  String
+  phone     String?
+  role      UserRole @default(PARENT)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  children          Child[]
+  sentMessages      Message[]     @relation("SentMessages")
+  receivedMessages  Message[]     @relation("ReceivedMessages")
+  expenses          Expense[]
+  activities        Activity[]
+  approvalRequests  Approval[]
+  auditLogs         AuditLog[]
+
+  @@map("users")
+}
+
+model Child {
+  id              String    @id @default(cuid())
+  firstName       String
+  lastName        String
+  dateOfBirth     DateTime
+  gender          String?
+  profileImageUrl String?
+  notes           String?
+  isActive        Boolean   @default(true)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  // Relations - Many-to-many with users (both parents)
+  parents         User[]
+  messages        Message[]
+  expenses        Expense[]
+  activities      Activity[]
+  documents       Document[]
+  milestones      Milestone[]
+
+  @@map("children")
+}
+
+model Message {
+  id        String      @id @default(cuid())
+  content   String
+  type      MessageType @default(GENERAL)
+  isRead    Boolean     @default(false)
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
+
+  // Relations
+  senderId   String
+  sender     User   @relation("SentMessages", fields: [senderId], references: [id])
+  receiverId String
+  receiver   User   @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  childId    String
+  child      Child  @relation(fields: [childId], references: [id])
+
+  @@map("messages")
+}
+
+model Expense {
+  id          String          @id @default(cuid())
+  title       String
+  description String?
+  amount      Float
+  category    ExpenseCategory
+  status      ExpenseStatus   @default(PENDING)
+  receiptUrl  String?
+  expenseDate DateTime
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  // Relations
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id])
+  childId     String
+  child       Child  @relation(fields: [childId], references: [id])
+
+  @@map("expenses")
+}
+
+model Activity {
+  id          String         @id @default(cuid())
+  title       String
+  description String?
+  type        ActivityType
+  status      ActivityStatus @default(PENDING)
+  startDate   DateTime
+  endDate     DateTime?
+  location    String?
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+
+  // Relations
+  createdById String
+  createdBy   User   @relation(fields: [createdById], references: [id])
+  childId     String
+  child       Child  @relation(fields: [childId], references: [id])
+
+  @@map("activities")
+}
+
+model Document {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  fileUrl     String
+  fileType    String
+  fileSize    Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  childId String
+  child   Child  @relation(fields: [childId], references: [id])
+
+  @@map("documents")
+}
+
+model Milestone {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  achievedAt  DateTime
+  category    String
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  childId String
+  child   Child  @relation(fields: [childId], references: [id])
+
+  @@map("milestones")
+}
+
+model Approval {
+  id         String   @id @default(cuid())
+  entityType String // "expense", "activity", etc.
+  entityId   String
+  status     String   @default("pending") // "pending", "approved", "rejected"
+  notes      String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  requesterId String
+  requester   User   @relation(fields: [requesterId], references: [id])
+
+  @@map("approvals")
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  action    String
+  entity    String
+  entityId  String
+  details   Json?
+  createdAt DateTime @default(now())
+
+  // Relations
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
