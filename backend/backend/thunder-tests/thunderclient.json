@@ -1,0 +1,109 @@
+[
+  {
+    "clientName": "Thunder Client",
+    "collectionName": "Kid Bridge API Tests",
+    "dateExported": "2025-08-02T23:08:00.000Z",
+    "version": "1.2",
+    "folders": [],
+    "requests": [
+      {
+        "name": "Health Check",
+        "url": "http://localhost:3001/",
+        "method": "GET",
+        "headers": [],
+        "colId": "kid-bridge-tests",
+        "created": "2025-08-02T23:08:00.000Z",
+        "modified": "2025-08-02T23:08:00.000Z"
+      },
+      {
+        "name": "Register User",
+        "url": "http://localhost:3001/auth/register",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "type": "json",
+          "raw": "{\n  \"email\": \"test@kidbridge.com\",\n  \"password\": \"password123\",\n  \"firstName\": \"Test\",\n  \"lastName\": \"User\",\n  \"phone\": \"+1234567890\"\n}",
+          "form": []
+        },
+        "colId": "kid-bridge-tests",
+        "created": "2025-08-02T23:08:00.000Z",
+        "modified": "2025-08-02T23:08:00.000Z"
+      },
+      {
+        "name": "Login User",
+        "url": "http://localhost:3001/auth/login",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "type": "json",
+          "raw": "{\n  \"email\": \"test@kidbridge.com\",\n  \"password\": \"password123\"\n}",
+          "form": []
+        },
+        "colId": "kid-bridge-tests",
+        "created": "2025-08-02T23:08:00.000Z",
+        "modified": "2025-08-02T23:08:00.000Z"
+      },
+      {
+        "name": "Get Profile",
+        "url": "http://localhost:3001/auth/profile",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "colId": "kid-bridge-tests",
+        "created": "2025-08-02T23:08:00.000Z",
+        "modified": "2025-08-02T23:08:00.000Z"
+      },
+      {
+        "name": "Create Child",
+        "url": "http://localhost:3001/children",
+        "method": "POST",
+        "headers": [
+          {
+            "name": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "name": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "body": {
+          "type": "json",
+          "raw": "{\n  \"firstName\": \"Emma\",\n  \"lastName\": \"Test\",\n  \"dateOfBirth\": \"2018-05-15T00:00:00.000Z\",\n  \"gender\": \"female\",\n  \"notes\": \"Test child profile\"\n}",
+          "form": []
+        },
+        "colId": "kid-bridge-tests",
+        "created": "2025-08-02T23:08:00.000Z",
+        "modified": "2025-08-02T23:08:00.000Z"
+      },
+      {
+        "name": "Get All Children",
+        "url": "http://localhost:3001/children",
+        "method": "GET",
+        "headers": [
+          {
+            "name": "Authorization",
+            "value": "Bearer {{access_token}}"
+          }
+        ],
+        "colId": "kid-bridge-tests",
+        "created": "2025-08-02T23:08:00.000Z",
+        "modified": "2025-08-02T23:08:00.000Z"
+      }
+    ]
+  }
+]
