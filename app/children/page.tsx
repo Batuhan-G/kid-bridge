@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { AuthGuard } from "@/lib/auth-guard"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -21,7 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Users, Plus, ArrowLeft, Upload, FileText, ImageIcon, Calendar, Heart } from "lucide-react"
 import Link from "next/link"
 
-export default function ChildrenPage() {
+function ChildrenPageContent() {
   const [isAddChildOpen, setIsAddChildOpen] = useState(false)
 
   const children = [
@@ -343,5 +344,13 @@ export default function ChildrenPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function ChildrenPage() {
+  return (
+    <AuthGuard>
+      <ChildrenPageContent />
+    </AuthGuard>
   )
 }

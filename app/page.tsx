@@ -1,9 +1,12 @@
+'use client';
+
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar, MessageCircle, Users, PieChart, Brain, Shield } from "lucide-react"
 import Link from "next/link"
+import { GuestOnly } from "@/lib/auth-guard"
 
-export default function LandingPage() {
+function LandingContent() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
       {/* Header */}
@@ -181,4 +184,8 @@ export default function LandingPage() {
       </footer>
     </div>
   )
+}
+
+export default function LandingPage() {
+  return <LandingContent />
 }

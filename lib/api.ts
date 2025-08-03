@@ -86,7 +86,9 @@ class ApiClient {
   private getAuthToken(): string | null {
     if (typeof window === 'undefined') return null;
     try {
-      return localStorage.getItem('auth_token');
+      const token = localStorage.getItem('auth_token');
+      console.log('Retrieved auth token:', token ? 'Token exists' : 'No token found');
+      return token;
     } catch (error) {
       console.error('Failed to get auth token from localStorage:', error);
       return null;
@@ -97,6 +99,7 @@ class ApiClient {
     if (typeof window === 'undefined') return;
     try {
       localStorage.setItem('auth_token', token);
+      console.log('Auth token stored in localStorage');
     } catch (error) {
       console.error('Failed to set auth token in localStorage:', error);
     }
@@ -126,13 +129,16 @@ class ApiClient {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
+    const fullUrl = `${API_BASE_URL}${endpoint}`;
+    console.log(`Making API request to: ${fullUrl}`);
+
     try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+      const response = await fetch(fullUrl, {
         ...options,
         headers,
         // Add security headers
         mode: 'cors',
-        credentials: 'omit', // Don't send cookies for security
+        credentials: 'include', // Include credentials for CORS
       });
 
       if (!response.ok) {
@@ -198,15 +204,34 @@ class ApiClient {
 
   isAuthenticated(): boolean {
     const token = this.getAuthToken();
-    if (!token) return false;
+    if (!token) {
+      console.log('isAuthenticated: No token found');
+      return false;
+    }
     
     try {
       // Check if token is expired (basic check)
-      const payload = JSON.parse(atob(token.split('.')[1]));
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        console.log('isAuthenticated: Invalid token format');
+        this.removeAuthToken();
+        return false;
+      }
+      
+      const payload = JSON.parse(atob(parts[1]));
       const exp = payload.exp * 1000; // Convert to milliseconds
-      return Date.now() < exp;
-    } catch {
+      const isValid = Date.now() < exp;
+      console.log('isAuthenticated: Token valid?', isValid);
+      
+      if (!isValid) {
+        console.log('isAuthenticated: Token expired, removing');
+        this.removeAuthToken();
+      }
+      
+      return isValid;
+    } catch (error) {
       // Invalid token format
+      console.log('isAuthenticated: Token parse error, removing token');
       this.removeAuthToken();
       return false;
     }

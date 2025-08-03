@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { api, Expense, Child, ExpenseStats, User } from "@/lib/api";
+import { AuthGuard } from "@/lib/auth-guard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -57,10 +58,12 @@ import { tr } from "date-fns/locale";
 import { getExpenseCategoryLabel } from "@/constants/enums";
 import { validateExpenseForm, FormErrors, ExpenseFormData } from "@/types/validations";
 import { formatAmount, parseAmount } from "@/utils/currency";
+import { useAuth } from "@/lib/auth-context";
 
 // Using Expense interface from API
 
-export default function ExpensesPage() {
+function ExpensesPageContent() {
+  const { user: authUser, isAuthenticated } = useAuth();
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [selectedChild, setSelectedChild] = useState<Child | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -87,10 +90,16 @@ export default function ExpensesPage() {
   const [stats, setStats] = useState<ExpenseStats | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
-  // Load data on component mount
+  // Load data on component mount - but only when authenticated
   useEffect(() => {
-    loadInitialData();
-  }, []);
+    console.log('ExpensesPage useEffect: checking auth state', { isAuthenticated, authUser });
+    if (isAuthenticated && authUser) {
+      console.log('User is authenticated, loading initial data...');
+      loadInitialData();
+    } else {
+      console.log('User not authenticated yet, skipping data load');
+    }
+  }, [isAuthenticated, authUser]);
 
   // Load expenses when selected child changes (only after initial load)
   useEffect(() => {
@@ -127,25 +136,53 @@ export default function ExpensesPage() {
   const loadInitialData = async () => {
     try {
       setIsLoading(true);
+      console.log('=== Starting loadInitialData ===');
+      
+      // Verify we have authentication
+      if (!api.isAuthenticated()) {
+        console.error('No authentication token available');
+        setErrorMessage('Authentication required. Please login again.');
+        return;
+      }
       
       // Load user profile
+      console.log('Loading user profile...');
       const profileResponse = await api.getProfile();
+      console.log('Profile API response:', profileResponse);
       if (profileResponse.data) {
+        console.log('Setting current user:', profileResponse.data);
         setCurrentUser(profileResponse.data);
+      } else {
+        console.error('Failed to load profile:', profileResponse.error);
       }
 
       // Load children
+      console.log('Loading children for user...');
       const childrenResponse = await api.getChildren();
+      console.log('Children API response:', childrenResponse);
+      
       if (childrenResponse.data && childrenResponse.data.length > 0) {
+        console.log('Found children:', childrenResponse.data);
         setChildren(childrenResponse.data);
         if (!selectedChild) {
+          console.log('Setting selected child to first child:', childrenResponse.data[0]);
           setSelectedChild(childrenResponse.data[0]);
           // useEffect will handle loading expenses and stats
         }
+      } else {
+        console.log('No children found for user. Response:', childrenResponse);
+        setChildren([]);
+      }
+
+      if (childrenResponse.error) {
+        console.error('Children API error:', childrenResponse.error);
+        setErrorMessage('Çocuk bilgileri yüklenirken hata oluştu: ' + childrenResponse.error);
       }
     } catch (error) {
+      console.error('Error loading initial data:', error);
       setErrorMessage("Veri yüklenirken bir hata oluştu");
     } finally {
+      console.log('=== Finished loadInitialData ===');
       setIsLoading(false);
     }
   };
@@ -940,5 +977,13 @@ export default function ExpensesPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function ExpensesPage() {
+  return (
+    <AuthGuard>
+      <ExpensesPageContent />
+    </AuthGuard>
   );
 }

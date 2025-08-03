@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { AuthGuard } from "@/lib/auth-guard";
+import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -20,6 +22,7 @@ import {
   TrendingUp,
   Clock,
   AlertCircle,
+  LogOut,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -61,7 +64,28 @@ interface Message {
   unread: boolean;
 }
 
-export default function Dashboard() {
+function LogoutButton() {
+  const { logout, user } = useAuth();
+
+  return (
+    <div className="flex items-center space-x-2">
+      <span className="text-sm text-gray-600 hidden md:block">
+        {user?.firstName} {user?.lastName}
+      </span>
+      <Button 
+        variant="ghost" 
+        size="sm" 
+        onClick={logout}
+        className="flex items-center space-x-1"
+      >
+        <LogOut className="w-4 h-4" />
+        <span className="hidden md:block">Çıkış</span>
+      </Button>
+    </div>
+  );
+}
+
+function DashboardContent() {
   const [children] = useState<Child[]>([
     {
       id: 1,
@@ -267,7 +291,7 @@ export default function Dashboard() {
                     </span>
                   )}
                 </Button>
-                <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
+                <LogoutButton />
               </div>
             </div>
           </div>
@@ -580,5 +604,13 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function Dashboard() {
+  return (
+    <AuthGuard>
+      <DashboardContent />
+    </AuthGuard>
   );
 }

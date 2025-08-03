@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AuthGuard } from "@/lib/auth-guard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,7 +23,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-export default function DevelopmentPage() {
+function DevelopmentPageContent() {
   const children = [
     {
       id: 1,
@@ -257,5 +258,13 @@ export default function DevelopmentPage() {
         </Tabs>
       </div>
     </div>
+  );
+}
+
+export default function DevelopmentPage() {
+  return (
+    <AuthGuard>
+      <DevelopmentPageContent />
+    </AuthGuard>
   );
 }
