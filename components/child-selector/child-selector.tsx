@@ -5,6 +5,17 @@ import { Badge } from "@/components/ui/badge"
 import type { Child, ChildSelectorProps } from './child-selector.types'
 
 export function ChildSelector({ children, selectedChild, onChildChange, showAll = false }: ChildSelectorProps) {
+  // Safe guard for undefined selectedChild
+  if (!selectedChild || !children || children.length === 0) {
+    return (
+      <Select disabled>
+        <SelectTrigger className="w-64">
+          <SelectValue placeholder="Yükleniyor..." />
+        </SelectTrigger>
+      </Select>
+    );
+  }
+
   return (
     <Select
       value={selectedChild.id.toString()}

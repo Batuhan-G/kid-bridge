@@ -22,7 +22,11 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3001;
   await app.listen(port);
-  console.log(`Application is running on: http://localhost:${port}`);
+  
+  // Use proper logging in production
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`Application is running on: http://localhost:${port}`);
+  }
 }
 
 void bootstrap();
