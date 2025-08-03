@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { AuthGuard } from "@/lib/auth-guard";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -57,7 +58,7 @@ interface Event {
   reminder?: boolean;
 }
 
-export default function CalendarPage() {
+function CalendarPageContent() {
   const [isAddEventOpen, setIsAddEventOpen] = useState(false);
   const [selectedChild, setSelectedChild] = useState<any>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -725,5 +726,13 @@ export default function CalendarPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+export default function CalendarPage() {
+  return (
+    <AuthGuard>
+      <CalendarPageContent />
+    </AuthGuard>
   );
 }

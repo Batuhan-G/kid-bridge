@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { AuthGuard } from "@/lib/auth-guard"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -28,7 +29,7 @@ interface Conversation {
   childId: number
 }
 
-export default function MessagesPage() {
+function MessagesPageContent() {
   const [selectedChat, setSelectedChat] = useState("mehmet-elif")
   const [newMessage, setNewMessage] = useState("")
   const [showAISuggestion, setShowAISuggestion] = useState(false)
@@ -356,5 +357,13 @@ export default function MessagesPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+export default function MessagesPage() {
+  return (
+    <AuthGuard>
+      <MessagesPageContent />
+    </AuthGuard>
   )
 }

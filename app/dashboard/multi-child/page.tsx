@@ -1,4 +1,5 @@
 "use client";
+import { AuthGuard } from "@/lib/auth-guard";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -21,7 +22,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 
-export default function MultiChildDashboard() {
+function MultiChildDashboardContent() {
   const children = [
     {
       id: 1,
@@ -423,5 +424,13 @@ export default function MultiChildDashboard() {
         </Tabs>
       </div>
     </div>
+  );
+}
+
+export default function MultiChildDashboard() {
+  return (
+    <AuthGuard>
+      <MultiChildDashboardContent />
+    </AuthGuard>
   );
 }
