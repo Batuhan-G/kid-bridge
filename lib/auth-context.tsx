@@ -28,7 +28,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
 
   const isAuthenticated = api.isAuthenticated() && user !== null;
-  
 
   const checkAuth = async () => {
     try {
@@ -59,9 +58,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  // Login method - error handling güncellenmiş
   const login = async (email: string, password: string) => {
     try {
-      setIsLoading(true);
       
       const response = await api.login(email, password);
       
@@ -69,16 +68,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         setUser(response.data.user);
         return { success: true };
       } else {
+        // API'den gelen error zaten translateErrorMessage ile çevrilmiş olacak
         return { success: false, error: response.error || 'Giriş başarısız oldu' };
       }
     } catch (error) {
       console.error('Login error:', error);
+      // Beklenmeyen error'lar için fallback
       return { success: false, error: 'Beklenmeyen bir hata oluştu' };
-    } finally {
-      setIsLoading(false);
     }
   };
 
+  // Register method
   const register = async (userData: {
     email: string;
     password: string;
@@ -98,9 +98,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
         return { success: false, error: 'Kayıt başarılı ancak giriş yapılamadı' };
       } else {
+        // API'den gelen error zaten çevrilmiş olacak
         return { success: false, error: response.error || 'Kayıt başarısız oldu' };
       }
     } catch (error) {
+      console.error('Register error:', error);
       return { success: false, error: 'Beklenmeyen bir hata oluştu' };
     } finally {
       setIsLoading(false);

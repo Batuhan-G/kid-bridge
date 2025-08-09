@@ -1,3 +1,5 @@
+import { translateErrorMessage } from '@/constants/error-messages';
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
 
 export interface ApiResponse<T> {
@@ -136,18 +138,11 @@ class ApiClient {
       const response = await fetch(fullUrl, {
         ...options,
         headers,
-        // Add security headers
         mode: 'cors',
-        credentials: 'include', // Include credentials for CORS
+        credentials: 'include',
       });
 
       if (!response.ok) {
-        // Handle authentication errors
-        if (response.status === 401) {
-          this.removeAuthToken();
-          return { error: 'Authentication failed. Please login again.' };
-        }
-        
         let errorText: string;
         try {
           const errorData = await response.json();
@@ -156,7 +151,20 @@ class ApiClient {
           errorText = await response.text() || `HTTP ${response.status}`;
         }
         
-        return { error: errorText };
+        // 401 error handling - sadece auth endpoint'leri dışında token'ı temizle
+        if (response.status === 401) {
+          // Login endpoint'inde 401 = yanlış şifre, token temizlemeye gerek yok
+          if (!endpoint.includes('/auth/login') && !endpoint.includes('/auth/register')) {
+            // Diğer endpoint'lerde 401 = token expired/invalid
+            this.removeAuthToken();
+            return { error: translateErrorMessage('Authentication failed. Please login again.') };
+          }
+          // Login endpoint'inde 401 ise gerçek error mesajını çevir
+          return { error: translateErrorMessage(errorText) };
+        }
+        
+        // Diğer HTTP hataları için error mesajını çevir
+        return { error: translateErrorMessage(errorText) };
       }
 
       const data = await response.json();
@@ -164,26 +172,25 @@ class ApiClient {
     } catch (error) {
       // Handle network errors
       if (error instanceof TypeError && error.message.includes('fetch')) {
-        return { error: 'Network connection failed. Please check your connection.' };
+        return { error: translateErrorMessage('Network connection failed. Please check your connection.') };
       }
-      return { error: error instanceof Error ? error.message : 'An unexpected error occurred' };
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      return { error: translateErrorMessage(errorMessage) };
     }
   }
 
   // Auth methods
   async login(email: string, password: string): Promise<ApiResponse<{ access_token: string; user: User }>> {
-    // Input validation
+    // Input validation - SADECE boş alan kontrolü
     if (!email || !password) {
-      return { error: 'Email and password are required' };
+      return { error: translateErrorMessage('Email and password are required') };
     }
     
     if (!email.includes('@') || email.length < 3) {
-      return { error: 'Please enter a valid email address' };
+      return { error: translateErrorMessage('Please enter a valid email address') };
     }
     
-    if (password.length < 6) {
-      return { error: 'Password must be at least 6 characters long' };
-    }
+    // ❌ Şifre uzunluk kontrolünü kaldırıyoruz - kullanıcı zaten şifresini biliyor
 
     const response = await this.request<{ access_token: string; user: User }>('/auth/login', {
       method: 'POST',
@@ -243,25 +250,26 @@ class ApiClient {
     firstName: string;
     lastName: string;
   }): Promise<ApiResponse<User>> {
-    // Input validation
+    // Input validation - Kayıt işleminde GEREKLI
     if (!userData.email || !userData.password || !userData.firstName || !userData.lastName) {
-      return { error: 'All fields are required' };
+      return { error: translateErrorMessage('All fields are required') };
     }
     
     if (!userData.email.includes('@') || userData.email.length < 3) {
-      return { error: 'Please enter a valid email address' };
+      return { error: translateErrorMessage('Please enter a valid email address') };
     }
     
+    // ✅ Register'da şifre uzunluk kontrolü OLMALI
     if (userData.password.length < 8) {
-      return { error: 'Password must be at least 8 characters long' };
+      return { error: translateErrorMessage('Password must be at least 8 characters long') };
     }
     
     if (userData.firstName.trim().length < 2) {
-      return { error: 'First name must be at least 2 characters long' };
+      return { error: translateErrorMessage('First name must be at least 2 characters long') };
     }
     
     if (userData.lastName.trim().length < 2) {
-      return { error: 'Last name must be at least 2 characters long' };
+      return { error: translateErrorMessage('Last name must be at least 2 characters long') };
     }
 
     // Sanitize input data
@@ -344,36 +352,36 @@ class ApiClient {
   }
 
   async createExpense(expenseData: CreateExpenseData): Promise<ApiResponse<Expense>> {
-    // Input validation
+    // Input validation - Türkçe mesajlarla
     if (!expenseData.title?.trim()) {
-      return { error: 'Expense title is required' };
+      return { error: 'Harcama başlığı zorunludur' };
     }
     
     if (!expenseData.amount || expenseData.amount <= 0) {
-      return { error: 'Amount must be greater than 0' };
+      return { error: 'Tutar 0\'dan büyük olmalıdır' };
     }
     
     if (expenseData.amount > 1000000) {
-      return { error: 'Amount cannot exceed 1,000,000' };
+      return { error: 'Tutar 1.000.000\'dan fazla olamaz' };
     }
     
     if (!expenseData.category) {
-      return { error: 'Category is required' };
+      return { error: 'Kategori seçimi zorunludur' };
     }
     
     if (!expenseData.childId?.trim()) {
-      return { error: 'Child selection is required' };
+      return { error: 'Çocuk seçimi zorunludur' };
     }
     
     if (!expenseData.expenseDate) {
-      return { error: 'Expense date is required' };
+      return { error: 'Harcama tarihi zorunludur' };
     }
 
     // Validate date is not in the future
     const expenseDate = new Date(expenseData.expenseDate);
     const today = new Date();
     if (expenseDate > today) {
-      return { error: 'Expense date cannot be in the future' };
+      return { error: 'Harcama tarihi gelecekte olamaz' };
     }
 
     // Sanitize input data

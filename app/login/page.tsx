@@ -13,8 +13,10 @@ import { useAuth } from "@/lib/auth-context"
 import { GuestOnly } from "@/lib/auth-guard"
 
 function LoginForm() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
+  const [formData, setFormData] = useState({
+    email: "",
+    password: ""
+  })
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -22,25 +24,55 @@ function LoginForm() {
   const { login } = useAuth()
   const router = useRouter()
 
+  // Clear error when user starts typing
+  const handleInputChange = (field: string, value: string) => {
+    if (error) {
+      setError("")
+    }
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }))
+  }
+
+  const validateForm = (): string | null => {
+    if (!formData.email.trim()) {
+      return "E-posta adresi gereklidir"
+    }
+    
+    if (!formData.email.includes('@') || formData.email.length < 5) {
+      return "Geçerli bir e-posta adresi girin"
+    }
+    
+    if (!formData.password.trim()) {
+      return "Şifre gereklidir"
+    }
+    return null
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    
+    const validationError = validateForm()
+    if (validationError) {
+      setError(validationError)
+      return
+    }
+
     setIsLoading(true)
 
     try {
-      const result = await login(email, password)
+      const result = await login(formData.email.trim(), formData.password)
       
       if (result.success) {
-        // Success case will be handled by GuestOnly redirect - don't manual redirect
-        console.log("Login successful, waiting for auto redirect...")
+        console.log("Login successful, redirecting...")
       } else {
-        // Ensure error is shown and loading is stopped
-        setError(result.error || "Giriş başarısız oldu")
-        console.log("Login failed:", result.error)
+        setError(result.error || "Giriş başarısız oldu. Lütfen bilgilerinizi kontrol edin.")
       }
     } catch (error) {
-      setError("Beklenmeyen bir hata oluştu")
-      console.error("Login error in form:", error)
+      console.error("Login error:", error)
+      setError("Beklenmeyen bir hata oluştu. Lütfen tekrar deneyin.")
     } finally {
       setIsLoading(false)
     }
@@ -62,7 +94,7 @@ function LoginForm() {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="animate-in fade-in duration-300">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
@@ -74,10 +106,12 @@ function LoginForm() {
                 id="email" 
                 type="email" 
                 placeholder="ornek@email.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                value={formData.email}
+                onChange={(e) => handleInputChange('email', e.target.value)}
                 required
                 disabled={isLoading}
+                className={error && !formData.email ? "border-red-300 focus:border-red-500" : ""}
+                autoComplete="email"
               />
             </div>
             
@@ -87,29 +121,34 @@ function LoginForm() {
                 <Input 
                   id="password" 
                   type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  value={formData.password}
+                  onChange={(e) => handleInputChange('password', e.target.value)}
                   required
                   disabled={isLoading}
-                  className="pr-10"
+                  className={`pr-10 ${error && !formData.password ? "border-red-300 focus:border-red-500" : ""}`}
+                  autoComplete="current-password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute inset-y-0 right-0 pr-3 flex items-center"
                   disabled={isLoading}
+                  tabIndex={-1}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-4 w-4 text-gray-400" />
+                    <EyeOff className="h-4 w-4 text-gray-400 hover:text-gray-600" />
                   ) : (
-                    <Eye className="h-4 w-4 text-gray-400" />
+                    <Eye className="h-4 w-4 text-gray-400 hover:text-gray-600" />
                   )}
                 </button>
               </div>
             </div>
             
             <div className="flex items-center justify-between">
-              <Link href="/forgot-password" className="text-sm text-indigo-600 hover:underline">
+              <Link 
+                href="/forgot-password" 
+                className="text-sm text-indigo-600 hover:underline focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded"
+              >
                 Şifremi Unuttum
               </Link>
             </div>
@@ -119,13 +158,23 @@ function LoginForm() {
               className="w-full" 
               disabled={isLoading}
             >
-              {isLoading ? "Giriş yapılıyor..." : "Giriş Yap"}
+              {isLoading ? (
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                  <span>Giriş yapılıyor...</span>
+                </div>
+              ) : (
+                "Giriş Yap"
+              )}
             </Button>
             
             <div className="text-center">
               <span className="text-sm text-gray-600">
                 Hesabınız yok mu?{" "}
-                <Link href="/register" className="text-indigo-600 hover:underline">
+                <Link 
+                  href="/register" 
+                  className="text-indigo-600 hover:underline focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 rounded"
+                >
                   Kayıt Olun
                 </Link>
               </span>
