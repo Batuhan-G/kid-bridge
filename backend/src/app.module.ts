@@ -7,6 +7,8 @@ import { AuthModule } from './auth/auth.module';
 import { ChildrenModule } from './children/children.module';
 import { MessagesModule } from './messages/messages.module';
 import { ExpensesModule } from './expenses/expenses.module';
+import { ConnectionsModule } from './connections/connections.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -19,6 +21,8 @@ import { ExpensesModule } from './expenses/expenses.module';
     ChildrenModule,
     MessagesModule,
     ExpensesModule,
+    ConnectionsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

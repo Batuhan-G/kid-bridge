@@ -3,6 +3,8 @@
 import { useState, useEffect } from "react";
 import { AuthGuard } from "@/lib/auth-guard";
 import { useAuth } from "@/lib/auth-context";
+import { useToast } from "@/hooks/use-toast";
+import { api } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -23,6 +25,10 @@ import {
   Clock,
   AlertCircle,
   LogOut,
+  Trash2,
+  Check,
+  X,
+  Loader2,
 } from "lucide-react";
 import Link from "next/link";
 import {
@@ -32,8 +38,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { SidebarTrigger } from "@/components/sidebar-trigger/sidebar-trigger";
 import { Sidebar } from "@/components/sidebar/sidebar";
+import { PendingInvitations } from "@/components/pending-invitations/pending-invitations";
 
 interface Child {
   id: number;
@@ -86,6 +94,8 @@ function LogoutButton() {
 }
 
 function DashboardContent() {
+  const { toast } = useToast();
+  const { user, isLoading: authLoading } = useAuth();
   const [children] = useState<Child[]>([
     {
       id: 1,
@@ -123,14 +133,149 @@ function DashboardContent() {
   ]);
 
   const [selectedChild, setSelectedChild] = useState(children[0]);
-  const [currentTime, setCurrentTime] = useState(new Date());
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [invitationCount, setInvitationCount] = useState(0);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
+  const [unreadNotificationCount, setUnreadNotificationCount] = useState(0);
+  
+  // Calculate actual notification count excluding invitations (which are handled separately)
+  const actualNotificationCount = notifications.filter((notification: any) => 
+    notification.type !== "INVITATION_RECEIVED" && !notification.isRead
+  ).length;
+  const [processingNotifications, setProcessingNotifications] = useState<Set<string>>(new Set());
 
-  // Real-time clock
+
+  // Fetch notifications - only when user is authenticated
   useEffect(() => {
-    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
-    return () => clearInterval(timer);
-  }, []);
+    if (!user || authLoading) return;
+    
+    const fetchNotifications = async () => {
+      try {
+        const result = await api.getNotifications();
+        if (!result.error && result.data) {
+          setNotifications(result.data);
+        }
+      } catch (error) {
+        console.error('Failed to fetch notifications:', error);
+      }
+    };
+
+    const fetchUnreadCount = async () => {
+      try {
+        const result = await api.getUnreadNotificationCount();
+        if (!result.error && result.data) {
+          setUnreadNotificationCount(result.data.count || 0);
+        }
+      } catch (error) {
+        console.error('Failed to fetch unread count:', error);
+      }
+    };
+
+    fetchNotifications();
+    fetchUnreadCount();
+  }, [user, authLoading]);
+
+  // Fetch initial invitation count - only when user is authenticated
+  useEffect(() => {
+    if (!user || authLoading) return;
+    
+    const fetchInitialInvitationCount = async () => {
+      try {
+        const result = await api.getPendingConnections();
+        if (!result.error && result.data) {
+          setInvitationCount(result.data.length);
+        }
+      } catch (error) {
+        console.error('Failed to fetch initial invitation count:', error);
+      }
+    };
+
+    fetchInitialInvitationCount();
+  }, [user, authLoading]);
+
+  // Notification action handlers
+  const handleAcceptNotification = async (notificationId: string) => {
+    setProcessingNotifications(prev => new Set(prev).add(notificationId));
+    
+    try {
+      const result = await api.acceptConnectionFromNotification(notificationId);
+      if (result.error) {
+        toast({
+          title: "Hata",
+          description: result.error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Başarılı",
+          description: "Co-parent bağlantısı kabul edildi",
+        });
+        // Refresh notifications and invitations
+        const notificationResult = await api.getNotifications();
+        if (!notificationResult.error && notificationResult.data) {
+          setNotifications(notificationResult.data);
+        }
+        const invitationResult = await api.getPendingConnections();
+        if (!invitationResult.error && invitationResult.data) {
+          setInvitationCount(invitationResult.data.length);
+        }
+      }
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "İşlem sırasında bir hata oluştu",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessingNotifications(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(notificationId);
+        return newSet;
+      });
+    }
+  };
+
+  const handleRejectNotification = async (notificationId: string) => {
+    setProcessingNotifications(prev => new Set(prev).add(notificationId));
+    
+    try {
+      const result = await api.rejectConnectionFromNotification(notificationId);
+      if (result.error) {
+        toast({
+          title: "Hata",
+          description: result.error,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Davet Reddedildi",
+          description: "Co-parent daveti reddedildi",
+        });
+        // Refresh notifications and invitations
+        const notificationResult = await api.getNotifications();
+        if (!notificationResult.error && notificationResult.data) {
+          setNotifications(notificationResult.data);
+        }
+        const invitationResult = await api.getPendingConnections();
+        if (!invitationResult.error && invitationResult.data) {
+          setInvitationCount(invitationResult.data.length);
+        }
+      }
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "İşlem sırasında bir hata oluştu",
+        variant: "destructive",
+      });
+    } finally {
+      setProcessingNotifications(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(notificationId);
+        return newSet;
+      });
+    }
+  };
 
   const [upcomingEvents] = useState<Event[]>([
     {
@@ -192,10 +337,7 @@ function DashboardContent() {
       (sum, child) => sum + child.stats.upcomingEvents,
       0
     ),
-    messages: children.reduce(
-      (sum, child) => sum + child.stats.unreadMessages,
-      0
-    ),
+    messages: 0, // Will be replaced with real message count later
     expenses: children.reduce(
       (sum, child) => sum + child.stats.monthlyExpenses,
       0
@@ -283,14 +425,145 @@ function DashboardContent() {
                 </SelectContent>
               </Select>
               <div className="flex items-center space-x-2">
-                <Button variant="ghost" size="sm" className="relative">
-                  <Bell className="w-4 h-4" />
-                  {totalStats.messages > 0 && (
-                    <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                      {totalStats.messages}
-                    </span>
-                  )}
-                </Button>
+                <Popover open={isNotificationsOpen} onOpenChange={setIsNotificationsOpen}>
+                  <PopoverTrigger asChild>
+                    <Button variant="ghost" size="sm" className="relative">
+                      <Bell className="w-4 h-4" />
+                      {(actualNotificationCount > 0 || invitationCount > 0) && (
+                        <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                          {actualNotificationCount + invitationCount}
+                        </span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-96 mr-4" align="end">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <h3 className="font-semibold text-lg">Bildirimler</h3>
+                        </div>
+                        {/* Show delete button only if there are non-invitation notifications */}
+                        {notifications.filter((notification: any) => notification.type !== "INVITATION_RECEIVED").length > 0 && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={async () => {
+                              try {
+                                await api.deleteAllNotifications();
+                                setNotifications([]);
+                                setUnreadNotificationCount(0);
+                                // Don't touch invitationCount - pending invitations should remain
+                                toast({
+                                  title: "Başarılı",
+                                  description: "Bildirimler silindi (Bekleyen davetler korundu)",
+                                });
+                              } catch (error) {
+                                toast({
+                                  title: "Hata",
+                                  description: "Bildirimler silinirken hata oluştu",
+                                  variant: "destructive",
+                                });
+                              }
+                            }}
+                            title="Tüm bildirimleri sil"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
+                      
+                      {/* Real notifications (excluding invitations which are handled separately) */}
+                      {notifications.filter((notification: any) => notification.type !== "INVITATION_RECEIVED").length > 0 && (
+                        <div>
+                          <div className="space-y-2">
+                            {notifications
+                              .filter((notification: any) => notification.type !== "INVITATION_RECEIVED") // Filter out invitation notifications - they are handled by PendingInvitations
+                              .map((notification: any) => {
+                              // Determine notification color based on type
+                              let bgColor = "bg-gray-50";
+                              let borderColor = "";
+                              
+                              if (notification.type === "CONNECTION_ACCEPTED" || notification.type === "CONNECTION_ACCEPTED_BY_ME") {
+                                bgColor = "bg-green-50";
+                                borderColor = "border-l-4 border-l-green-500";
+                              } else if (notification.type === "CONNECTION_REJECTED" || notification.type === "CONNECTION_REJECTED_BY_ME") {
+                                bgColor = "bg-yellow-50";
+                                borderColor = "border-l-4 border-l-yellow-500";
+                              } else if (notification.type === "INVITATION_SENT") {
+                                bgColor = "bg-blue-50";
+                                borderColor = "border-l-4 border-l-blue-500";
+                              }
+                              
+                              return (
+                              <div key={notification.id} className={`p-3 ${bgColor} rounded-lg ${borderColor}`}>
+                                <div className="flex items-start justify-between">
+                                  <div className="flex-1">
+                                    <h5 className="font-medium text-sm">{notification.title}</h5>
+                                    <p className="text-sm text-gray-600 mt-1">{notification.message}</p>
+                                    <p className="text-xs text-gray-500 mt-2">
+                                      {new Date(notification.createdAt).toLocaleDateString('tr-TR', {
+                                        day: 'numeric',
+                                        month: 'long',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                      })}
+                                    </p>
+                                  </div>
+                                  {/* Action buttons for actionable notifications */}
+                                  {notification.actionable && notification.type === 'INVITATION_RECEIVED' && !notification.isRead && (
+                                    <div className="flex items-center space-x-2 ml-3">
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={() => handleRejectNotification(notification.id)}
+                                        disabled={processingNotifications.has(notification.id)}
+                                        className="text-red-600 hover:text-red-700"
+                                      >
+                                        {processingNotifications.has(notification.id) ? (
+                                          <Loader2 className="w-3 h-3 animate-spin" />
+                                        ) : (
+                                          <X className="w-3 h-3" />
+                                        )}
+                                      </Button>
+                                      <Button
+                                        size="sm"
+                                        onClick={() => handleAcceptNotification(notification.id)}
+                                        disabled={processingNotifications.has(notification.id)}
+                                      >
+                                        {processingNotifications.has(notification.id) ? (
+                                          <Loader2 className="w-3 h-3 animate-spin" />
+                                        ) : (
+                                          <Check className="w-3 h-3" />
+                                        )}
+                                      </Button>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Co-parent invitations section - only show if there are pending invitations */}
+                      {invitationCount > 0 && (
+                        <div>
+                          <h4 className="font-medium mb-3">Co-Parent Daveti</h4>
+                          <PendingInvitations onCountUpdate={setInvitationCount} />
+                        </div>
+                      )}
+                      
+                      {/* Empty state when no notifications or invitations */}
+                      {notifications.filter((notification: any) => notification.type !== "INVITATION_RECEIVED").length === 0 && invitationCount === 0 && (
+                        <div className="text-center py-8 text-gray-500">
+                          <Bell className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                          <p className="text-sm">Henüz bildiriminiz yok</p>
+                        </div>
+                      )}
+                    </div>
+                  </PopoverContent>
+                </Popover>
                 <LogoutButton />
               </div>
             </div>

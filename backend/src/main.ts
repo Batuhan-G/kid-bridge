@@ -18,8 +18,10 @@ async function bootstrap() {
   app.enableCors({
     origin: [
       'http://localhost:3000',
+      'http://localhost:3002',
       'http://127.0.0.1:3000',
-      process.env.CORS_ORIGIN || 'http://localhost:3000'
+      'http://127.0.0.1:3002',
+      process.env.CORS_ORIGIN || 'http://localhost:3000',
     ],
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
@@ -28,7 +30,7 @@ async function bootstrap() {
 
   const port = process.env.PORT || 3001;
   await app.listen(port);
-  
+
   // Use proper logging in production
   if (process.env.NODE_ENV === 'development') {
     console.log(`Application is running on: http://localhost:${port}`);

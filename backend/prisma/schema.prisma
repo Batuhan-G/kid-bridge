@@ -225,3 +225,30 @@ model AuditLog {
 
   @@map("audit_logs")
 }
+
+model ParentConnection {
+  id            String   @id @default(cuid())
+  requesterEmail String
+  receiverEmail  String
+  status        String   @default("PENDING") // PENDING, ACCEPTED, REJECTED
+  message       String?  // Optional message from requester
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([requesterEmail, receiverEmail])
+  @@map("parent_connections")
+}
+
+model Notification {
+  id           String   @id @default(cuid())
+  userEmail    String   // The user who will receive this notification
+  type         String   // "CONNECTION_ACCEPTED", "CONNECTION_REJECTED", "INVITATION_SENT", etc.
+  title        String
+  message      String
+  isRead       Boolean  @default(false)
+  actionable   Boolean  @default(false) // True if notification has action buttons
+  connectionId String?  // Reference to ParentConnection for actionable invitations
+  createdAt    DateTime @default(now())
+
+  @@map("notifications")
+}
