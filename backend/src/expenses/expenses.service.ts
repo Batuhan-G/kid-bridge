@@ -19,7 +19,10 @@ export class ExpensesService {
       throw new BadRequestException('Invalid user ID');
     }
 
-    if (!createExpenseDto.childId || typeof createExpenseDto.childId !== 'string') {
+    if (
+      !createExpenseDto.childId ||
+      typeof createExpenseDto.childId !== 'string'
+    ) {
       throw new BadRequestException('Invalid child ID');
     }
 
@@ -283,17 +286,21 @@ export class ExpensesService {
       })
       .reduce((sum, expense) => sum + expense.amount, 0);
 
-    const change = lastMonth > 0 ? ((thisMonth - lastMonth) / lastMonth) * 100 : 0;
+    const change =
+      lastMonth > 0 ? ((thisMonth - lastMonth) / lastMonth) * 100 : 0;
 
-    const categoryStats = expenses.reduce((acc, expense) => {
-      const category = expense.category;
-      if (!acc[category]) {
-        acc[category] = { total: 0, count: 0 };
-      }
-      acc[category].total += expense.amount;
-      acc[category].count += 1;
-      return acc;
-    }, {} as Record<string, { total: number; count: number }>);
+    const categoryStats = expenses.reduce(
+      (acc, expense) => {
+        const category = expense.category;
+        if (!acc[category]) {
+          acc[category] = { total: 0, count: 0 };
+        }
+        acc[category].total += expense.amount;
+        acc[category].count += 1;
+        return acc;
+      },
+      {} as Record<string, { total: number; count: number }>,
+    );
 
     return {
       total,

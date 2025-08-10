@@ -19,11 +19,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Users, Plus, ArrowLeft, Upload, FileText, ImageIcon, Calendar, Heart } from "lucide-react"
+import { Users, Plus, ArrowLeft, Upload, FileText, ImageIcon, Calendar, Heart, UserPlus } from "lucide-react"
 import Link from "next/link"
+import { InviteCoParentModal } from "@/components/invite-co-parent-modal/invite-co-parent-modal"
 
 function ChildrenPageContent() {
   const [isAddChildOpen, setIsAddChildOpen] = useState(false)
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
 
   const children = [
     {
@@ -147,57 +149,66 @@ function ChildrenPageContent() {
                 <h1 className="text-xl font-bold text-gray-900">Çocuklar</h1>
               </div>
             </div>
-            <Dialog open={isAddChildOpen} onOpenChange={setIsAddChildOpen}>
-              <DialogTrigger asChild>
-                <Button>
-                  <Plus className="w-4 h-4 mr-2" />
-                  Çocuk Ekle
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-[425px]">
-                <DialogHeader>
-                  <DialogTitle>Yeni Çocuk Ekle</DialogTitle>
-                  <DialogDescription>Çocuğunuzun bilgilerini girin</DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="name" className="text-right">
-                      Ad Soyad
-                    </Label>
-                    <Input id="name" className="col-span-3" />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="birthdate" className="text-right">
-                      Doğum Tarihi
-                    </Label>
-                    <Input id="birthdate" type="date" className="col-span-3" />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="school" className="text-right">
-                      Okul
-                    </Label>
-                    <Input id="school" className="col-span-3" />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="grade" className="text-right">
-                      Sınıf
-                    </Label>
-                    <Input id="grade" className="col-span-3" />
-                  </div>
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="health" className="text-right">
-                      Sağlık Bilgisi
-                    </Label>
-                    <Textarea id="health" className="col-span-3" />
-                  </div>
-                </div>
-                <DialogFooter>
-                  <Button type="submit" onClick={() => setIsAddChildOpen(false)}>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsInviteModalOpen(true)}
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                Co-Parent Ekle
+              </Button>
+              <Dialog open={isAddChildOpen} onOpenChange={setIsAddChildOpen}>
+                <DialogTrigger asChild>
+                  <Button>
+                    <Plus className="w-4 h-4 mr-2" />
                     Çocuk Ekle
                   </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                </DialogTrigger>
+                <DialogContent className="sm:max-w-[425px]">
+                  <DialogHeader>
+                    <DialogTitle>Yeni Çocuk Ekle</DialogTitle>
+                    <DialogDescription>Çocuğunuzun bilgilerini girin</DialogDescription>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="name" className="text-right">
+                        Ad Soyad
+                      </Label>
+                      <Input id="name" className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="birthdate" className="text-right">
+                        Doğum Tarihi
+                      </Label>
+                      <Input id="birthdate" type="date" className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="school" className="text-right">
+                        Okul
+                      </Label>
+                      <Input id="school" className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="grade" className="text-right">
+                        Sınıf
+                      </Label>
+                      <Input id="grade" className="col-span-3" />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
+                      <Label htmlFor="health" className="text-right">
+                        Sağlık Bilgisi
+                      </Label>
+                      <Textarea id="health" className="col-span-3" />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button type="submit" onClick={() => setIsAddChildOpen(false)}>
+                      Çocuk Ekle
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
         </div>
       </header>
@@ -343,6 +354,15 @@ function ChildrenPageContent() {
           ))}
         </div>
       </div>
+
+      <InviteCoParentModal 
+        open={isInviteModalOpen}
+        onOpenChange={setIsInviteModalOpen}
+        onSuccess={() => {
+          // Could refresh children list here if needed
+          console.log('Co-parent invitation sent successfully')
+        }}
+      />
     </div>
   )
 }

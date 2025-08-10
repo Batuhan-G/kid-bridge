@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Checkbox } from "@/components/ui/checkbox"
+import { useToast } from "@/hooks/use-toast"
 import { Users, AlertCircle, Eye, EyeOff } from "lucide-react"
 import Link from "next/link"
 import { useAuth } from "@/lib/auth-context"
@@ -29,6 +30,7 @@ function RegisterForm() {
   
   const { register } = useAuth()
   const router = useRouter()
+  const { toast } = useToast()
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }))
@@ -71,6 +73,10 @@ function RegisterForm() {
     })
     
     if (result.success) {
+      toast({
+        title: "Başarılı!",
+        description: "Hesabınız başarıyla oluşturuldu. Hoş geldiniz!",
+      })
       router.push("/dashboard")
     } else {
       setError(result.error || "Kayıt başarısız oldu")

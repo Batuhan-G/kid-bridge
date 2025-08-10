@@ -89,7 +89,6 @@ class ApiClient {
     if (typeof window === 'undefined') return null;
     try {
       const token = localStorage.getItem('auth_token');
-      console.log('Retrieved auth token:', token ? 'Token exists' : 'No token found');
       return token;
     } catch (error) {
       console.error('Failed to get auth token from localStorage:', error);
@@ -101,7 +100,6 @@ class ApiClient {
     if (typeof window === 'undefined') return;
     try {
       localStorage.setItem('auth_token', token);
-      console.log('Auth token stored in localStorage');
     } catch (error) {
       console.error('Failed to set auth token in localStorage:', error);
     }
@@ -132,7 +130,6 @@ class ApiClient {
     }
 
     const fullUrl = `${API_BASE_URL}${endpoint}`;
-    console.log(`Making API request to: ${fullUrl}`);
 
     try {
       const response = await fetch(fullUrl, {
@@ -414,6 +411,81 @@ class ApiClient {
   async getExpenseStats(childId?: string): Promise<ApiResponse<ExpenseStats>> {
     const endpoint = childId ? `/expenses/stats?childId=${childId}` : '/expenses/stats';
     return this.request(endpoint);
+  }
+
+  // Connections methods
+  async inviteCoParent(data: { receiverEmail: string; message?: string }): Promise<ApiResponse<any>> {
+    if (!data.receiverEmail?.trim()) {
+      return { error: 'Email adresi zorunludur' };
+    }
+    
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(data.receiverEmail.trim())) {
+      return { error: 'Geçerli bir email adresi giriniz' };
+    }
+
+    const sanitizedData = {
+      receiverEmail: data.receiverEmail.toLowerCase().trim(),
+      message: data.message?.trim(),
+    };
+
+    return this.request('/connections/invite', {
+      method: 'POST',
+      body: JSON.stringify(sanitizedData),
+    });
+  }
+
+  async getPendingConnections(): Promise<ApiResponse<any[]>> {
+    return this.request('/connections/pending');
+  }
+
+  async acceptConnection(connectionId: string): Promise<ApiResponse<any>> {
+    return this.request(`/connections/${connectionId}/accept`, {
+      method: 'PATCH',
+    });
+  }
+
+  async rejectConnection(connectionId: string): Promise<ApiResponse<any>> {
+    return this.request(`/connections/${connectionId}/reject`, {
+      method: 'PATCH',
+    });
+  }
+
+  // Notifications
+  async getNotifications(): Promise<ApiResponse<any>> {
+    return this.request('/notifications');
+  }
+
+  async getUnreadNotificationCount(): Promise<ApiResponse<any>> {
+    return this.request('/notifications/unread-count');
+  }
+
+  async markNotificationAsRead(notificationId: string): Promise<ApiResponse<any>> {
+    return this.request(`/notifications/${notificationId}/read`, {
+      method: 'PATCH',
+    });
+  }
+
+  async markAllNotificationsAsRead(): Promise<ApiResponse<any>> {
+    return this.request('/notifications/mark-all-read', {
+      method: 'PATCH',
+    });
+  }
+
+  async deleteAllNotifications(): Promise<ApiResponse<any>> {
+    return this.request('/notifications/all', {
+      method: 'DELETE',
+    });
+  }
+  async acceptConnectionFromNotification(notificationId: string): Promise<ApiResponse<any>> {
+    return this.request(`/notifications/${notificationId}/accept-connection`, {
+      method: 'POST',
+    });
+  }
+  async rejectConnectionFromNotification(notificationId: string): Promise<ApiResponse<any>> {
+    return this.request(`/notifications/${notificationId}/reject-connection`, {
+      method: 'POST',
+    });
   }
 }
 
