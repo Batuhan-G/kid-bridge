@@ -19,11 +19,22 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Users, Plus, ArrowLeft, Upload, FileText, ImageIcon, Calendar, Heart } from "lucide-react"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import { Users, Plus, Upload, FileText, ImageIcon, Calendar, Heart, Bell, Home } from "lucide-react"
 import Link from "next/link"
+import { SidebarTrigger } from "@/components/sidebar-trigger/sidebar-trigger"
+import { Sidebar } from "@/components/sidebar/sidebar"
 
 function ChildrenPageContent() {
   const [isAddChildOpen, setIsAddChildOpen] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   const children = [
     {
@@ -36,6 +47,11 @@ function ChildrenPageContent() {
       avatar: "E",
       healthInfo: "Astım tedavisi görüyor",
       notes: "Matematik konusunda destek gerekiyor",
+      stats: {
+        upcomingEvents: 3,
+        unreadMessages: 1,
+        monthlyExpenses: 1200,
+      },
     },
     {
       id: 2,
@@ -47,6 +63,11 @@ function ChildrenPageContent() {
       avatar: "C",
       healthInfo: "Sağlıklı",
       notes: "Spor aktivitelerine çok ilgili",
+      stats: {
+        upcomingEvents: 2,
+        unreadMessages: 2,
+        monthlyExpenses: 800,
+      },
     },
     {
       id: 3,
@@ -58,8 +79,21 @@ function ChildrenPageContent() {
       avatar: "Z",
       healthInfo: "Alerji testleri yapılacak",
       notes: "Sosyal gelişimi çok iyi",
+      stats: {
+        upcomingEvents: 1,
+        unreadMessages: 0,
+        monthlyExpenses: 450,
+      },
     },
   ]
+
+  const [selectedChild, setSelectedChild] = useState(children[0])
+  
+  const totalStats = {
+    events: children.reduce((sum, child) => sum + child.stats.upcomingEvents, 0),
+    messages: children.reduce((sum, child) => sum + child.stats.unreadMessages, 0),
+    expenses: children.reduce((sum, child) => sum + child.stats.monthlyExpenses, 0),
+  }
 
   const getChildFiles = (childId: number) => {
     const allFiles = {
@@ -136,17 +170,47 @@ function ChildrenPageContent() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Link href="/dashboard">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Dashboard
-                </Button>
-              </Link>
-              <div className="flex items-center space-x-2">
-                <Users className="w-6 h-6 text-indigo-600" />
-                <h1 className="text-xl font-bold text-gray-900">Çocuklar</h1>
+              {/* Sidebar Trigger */}
+              <SidebarTrigger
+                onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+                totalStats={totalStats}
+              />
+
+              {/* Logo and KidBridge - hidden on mobile */}
+              <div className="hidden md:flex items-center space-x-2">
+                <div className="flex items-center justify-center">
+                  <img
+                    src="/kid-bridge-logo1.png"
+                    alt="KidBridge Logo"
+                    className="w-12 h-12 flex-shrink-0"/>
+                </div>
+                <span className="text-xl font-bold text-gray-900 whitespace-nowrap">KidBridge</span>
+              </div>
+              
+              {/* Breadcrumb Navigation - hidden on mobile */}
+              <div className="hidden md:block">
+                <Breadcrumb>
+                  <BreadcrumbList>
+                    <BreadcrumbItem>
+                      <BreadcrumbLink asChild>
+                        <Link href="/dashboard" className="flex items-center space-x-1">
+                          <Home className="w-4 h-4" />
+                          <span>Ana Sayfa</span>
+                        </Link>
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                      <BreadcrumbPage className="flex items-center space-x-1">
+                        <Users className="w-4 h-4" />
+                        <span>Çocuklar</span>
+                      </BreadcrumbPage>
+                    </BreadcrumbItem>
+                  </BreadcrumbList>
+                </Breadcrumb>
               </div>
             </div>
+            
             <div className="flex items-center space-x-2">
               <Dialog open={isAddChildOpen} onOpenChange={setIsAddChildOpen}>
                 <DialogTrigger asChild>
@@ -203,6 +267,15 @@ function ChildrenPageContent() {
           </div>
         </div>
       </header>
+
+      <Sidebar
+        children={children}
+        selectedChild={selectedChild}
+        onChildChange={setSelectedChild}
+        totalStats={totalStats}
+        isOpen={isSidebarOpen}
+        onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+      />
 
       <div className="container mx-auto px-4 py-8">
         {/* Children List */}

@@ -7,9 +7,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { MessageCircle, Send, ArrowLeft, Lightbulb, AlertTriangle, Check } from "lucide-react"
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import { MessageCircle, Send, Lightbulb, AlertTriangle, Check, Home } from "lucide-react"
 import Link from "next/link"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { SidebarTrigger } from "@/components/sidebar-trigger/sidebar-trigger"
+import { Sidebar } from "@/components/sidebar/sidebar"
 
 interface Message {
   id: number
@@ -34,12 +44,51 @@ function MessagesPageContent() {
   const [newMessage, setNewMessage] = useState("")
   const [showAISuggestion, setShowAISuggestion] = useState(false)
   const [isMobileConversationOpen, setIsMobileConversationOpen] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   const children = [
-    { id: 1, name: "Elif", age: 8, avatar: "E" },
-    { id: 2, name: "Can", age: 12, avatar: "C" },
-    { id: 3, name: "Zeynep", age: 6, avatar: "Z" },
+    { 
+      id: 1, 
+      name: "Elif", 
+      age: 8, 
+      avatar: "E",
+      stats: {
+        upcomingEvents: 3,
+        unreadMessages: 1,
+        monthlyExpenses: 1200,
+      },
+    },
+    { 
+      id: 2, 
+      name: "Can", 
+      age: 12, 
+      avatar: "C",
+      stats: {
+        upcomingEvents: 2,
+        unreadMessages: 2,
+        monthlyExpenses: 800,
+      },
+    },
+    { 
+      id: 3, 
+      name: "Zeynep", 
+      age: 6, 
+      avatar: "Z",
+      stats: {
+        upcomingEvents: 1,
+        unreadMessages: 0,
+        monthlyExpenses: 450,
+      },
+    },
   ]
+
+  const [selectedChild, setSelectedChild] = useState(children[0])
+  
+  const totalStats = {
+    events: children.reduce((sum, child) => sum + child.stats.upcomingEvents, 0),
+    messages: children.reduce((sum, child) => sum + child.stats.unreadMessages, 0),
+    expenses: children.reduce((sum, child) => sum + child.stats.monthlyExpenses, 0),
+  }
 
   const [conversations, setConversations] = useState<Conversation[]>([
     {
@@ -70,8 +119,6 @@ function MessagesPageContent() {
       childId: 3,
     },
   ])
-
-  const [selectedChild, setSelectedChild] = useState<number | "all">("all")
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -166,8 +213,7 @@ function MessagesPageContent() {
     setConversations(conversations.map((conv) => (conv.id === convId ? { ...conv, unread: 0 } : conv)))
   }
 
-  const filteredConversations =
-    selectedChild === "all" ? conversations : conversations.filter((conv) => conv.childId === selectedChild)
+  const filteredConversations = conversations.filter((conv) => conv.childId === selectedChild.id)
 
   const currentConversation = conversations.find((conv) => conv.id === selectedChat)
 
@@ -176,18 +222,48 @@ function MessagesPageContent() {
       {/* Header */}
       <header className="bg-white shadow-sm border-b">
         <div className="container mx-auto px-4 py-4">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Link href="/dashboard">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Dashboard
-                </Button>
-              </Link>
-              <div className="flex items-center space-x-2">
-                <MessageCircle className="w-6 h-6 text-indigo-600" />
-                <h1 className="text-xl font-bold text-gray-900">Mesajlar</h1>
+              {/* Sidebar Trigger */}
+              <SidebarTrigger
+                onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+                totalStats={totalStats}
+              />
+
+              {/* Logo and KidBridge - hidden on mobile */}
+              <div className="hidden md:flex items-center space-x-2">
+                <div className="flex items-center justify-center">
+                  <img
+                    src="/kid-bridge-logo1.png"
+                    alt="KidBridge Logo"
+                    className="w-12 h-12 flex-shrink-0"/>
+                </div>
+                <span className="text-xl font-bold text-gray-900 whitespace-nowrap">KidBridge</span>
               </div>
+              
+              {/* Breadcrumb Navigation - hidden on mobile */}
+              <div className="hidden md:block">
+                <Breadcrumb>
+                  <BreadcrumbList>
+                    <BreadcrumbItem>
+                      <BreadcrumbLink asChild>
+                        <Link href="/dashboard" className="flex items-center space-x-1">
+                          <Home className="w-4 h-4" />
+                          <span>Ana Sayfa</span>
+                        </Link>
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                      <BreadcrumbPage className="flex items-center space-x-1">
+                        <MessageCircle className="w-4 h-4" />
+                        <span>Mesajlar</span>
+                      </BreadcrumbPage>
+                    </BreadcrumbItem>
+                  </BreadcrumbList>
+                </Breadcrumb>
+              </div>
+              
               {/* Mobile back button */}
               {isMobileConversationOpen && (
                 <Button
@@ -202,8 +278,15 @@ function MessagesPageContent() {
               )}
             </div>
             <Select
-              value={selectedChild.toString()}
-              onValueChange={(value) => setSelectedChild(value === "all" ? "all" : Number.parseInt(value))}
+              value={selectedChild.id.toString()}
+              onValueChange={(value) => {
+                if (value === "all") {
+                  setSelectedChild(children[0]) // Default to first child for now
+                } else {
+                  const child = children.find(c => c.id === Number.parseInt(value))
+                  if (child) setSelectedChild(child)
+                }
+              }}
             >
               <SelectTrigger className="w-full sm:w-48">
                 <SelectValue />
@@ -225,6 +308,15 @@ function MessagesPageContent() {
           </div>
         </div>
       </header>
+
+      <Sidebar
+        children={children}
+        selectedChild={selectedChild}
+        onChildChange={setSelectedChild}
+        totalStats={totalStats}
+        isOpen={isSidebarOpen}
+        onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+      />
 
       <div className="container mx-auto px-4 py-6">
         <div className="grid lg:grid-cols-4 gap-6 h-[calc(100vh-200px)]">

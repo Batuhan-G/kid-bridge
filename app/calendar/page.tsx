@@ -41,10 +41,20 @@ import {
   Heart,
   UsersIcon,
   FileText,
+  Home,
 } from "lucide-react";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 import { ChildSelector } from "@/components/child-selector/child-selector";
 import { Sidebar } from "@/components/sidebar/sidebar";
 import { SidebarTrigger } from "@/components/sidebar-trigger/sidebar-trigger";
+import Link from "next/link";
 
 interface Event {
   id: number;
@@ -68,10 +78,49 @@ function CalendarPageContent() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const children = [
-    { id: 1, name: "Elif", age: 8, avatar: "E", school: "Atatürk İlkokulu" },
-    { id: 2, name: "Can", age: 12, avatar: "C", school: "Gazi Ortaokulu" },
-    { id: 3, name: "Zeynep", age: 6, avatar: "Z", school: "Anaokulu" },
+    { 
+      id: 1, 
+      name: "Elif", 
+      age: 8, 
+      avatar: "E", 
+      school: "Atatürk İlkokulu",
+      stats: {
+        upcomingEvents: 3,
+        unreadMessages: 1,
+        monthlyExpenses: 1200,
+      },
+    },
+    { 
+      id: 2, 
+      name: "Can", 
+      age: 12, 
+      avatar: "C", 
+      school: "Gazi Ortaokulu",
+      stats: {
+        upcomingEvents: 2,
+        unreadMessages: 2,
+        monthlyExpenses: 800,
+      },
+    },
+    { 
+      id: 3, 
+      name: "Zeynep", 
+      age: 6, 
+      avatar: "Z", 
+      school: "Anaokulu",
+      stats: {
+        upcomingEvents: 1,
+        unreadMessages: 0,
+        monthlyExpenses: 450,
+      },
+    },
   ];
+
+  const totalStats = {
+    events: children.reduce((sum, child) => sum + child.stats.upcomingEvents, 0),
+    messages: children.reduce((sum, child) => sum + child.stats.unreadMessages, 0),
+    expenses: children.reduce((sum, child) => sum + child.stats.monthlyExpenses, 0),
+  }
 
   const [events, setEvents] = useState<Event[]>([
     {
@@ -143,12 +192,6 @@ function CalendarPageContent() {
       borderColor: "border-gray-200",
     },
   ];
-
-  const totalStats = {
-    events: children.reduce((sum) => sum + 2, 0),
-    messages: children.reduce((sum) => sum + 1, 0),
-    expenses: children.reduce((sum) => sum + 800, 0),
-  };
 
   const handleAddEvent = async (formData: FormData) => {
     setIsSubmitting(true);
@@ -226,9 +269,38 @@ function CalendarPageContent() {
                 totalStats={totalStats}
               />
 
-              <div className="flex items-center space-x-2">
-                <Calendar className="w-6 h-6 text-indigo-600" />
-                <h1 className="text-xl font-bold text-gray-900">Takvim</h1>
+              {/* Logo and KidBridge - hidden on mobile */}
+              <div className="hidden md:flex items-center space-x-2">
+                <div className="flex items-center justify-center">
+                  <img
+                    src="/kid-bridge-logo1.png"
+                    alt="KidBridge Logo"
+                    className="w-12 h-12 flex-shrink-0"/>
+                </div>
+                <span className="text-xl font-bold text-gray-900 whitespace-nowrap">KidBridge</span>
+              </div>
+              
+              {/* Breadcrumb Navigation - hidden on mobile */}
+              <div className="hidden md:block">
+                <Breadcrumb>
+                  <BreadcrumbList>
+                    <BreadcrumbItem>
+                      <BreadcrumbLink asChild>
+                        <Link href="/dashboard" className="flex items-center space-x-1">
+                          <Home className="w-4 h-4" />
+                          <span>Ana Sayfa</span>
+                        </Link>
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                      <BreadcrumbPage className="flex items-center space-x-1">
+                        <Calendar className="w-4 h-4" />
+                        <span>Takvim</span>
+                      </BreadcrumbPage>
+                    </BreadcrumbItem>
+                  </BreadcrumbList>
+                </Breadcrumb>
               </div>
             </div>
 

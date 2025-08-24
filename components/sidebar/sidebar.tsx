@@ -25,7 +25,7 @@ export function Sidebar({ children, selectedChild, onChildChange, totalStats, is
 
   const navigationItems = [
     {
-      name: "Dashboard",
+      name: "Ana Sayfa",
       href: "/dashboard",
       icon: Home,
       current: pathname === "/dashboard",

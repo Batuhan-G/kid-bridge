@@ -17,15 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+
 import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
@@ -46,10 +38,17 @@ import {
   Gamepad2,
   Trash2,
   Filter,
-  ArrowLeft,
   Calendar as CalendarIcon,
 } from "lucide-react";
 import { ChildSelector } from "@/components/child-selector/child-selector";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
 import { SidebarTrigger } from "@/components/sidebar-trigger/sidebar-trigger";
 import { Sidebar } from "@/components/sidebar/sidebar";
 import Link from "next/link";
@@ -342,11 +341,38 @@ function ExpensesPageContent() {
                 totalStats={totalStats}
               />
 
-              <div className="flex items-center space-x-2">
-                <PieChart className="w-6 h-6 text-indigo-600" />
-                <h1 className="text-xl font-bold text-gray-900">
-                  Harcama Takibi
-                </h1>
+              {/* Logo and KidBridge - hidden on mobile */}
+              <div className="hidden md:flex items-center space-x-2">
+                <div className="flex items-center justify-center">
+                  <img
+                    src="/kid-bridge-logo1.png"
+                    alt="KidBridge Logo"
+                    className="w-12 h-12 flex-shrink-0"/>
+                </div>
+                <span className="text-xl font-bold text-gray-900 whitespace-nowrap">KidBridge</span>
+              </div>
+              
+              {/* Breadcrumb Navigation - hidden on mobile */}
+              <div className="hidden md:block">
+                <Breadcrumb>
+                  <BreadcrumbList>
+                    <BreadcrumbItem>
+                      <BreadcrumbLink asChild>
+                        <Link href="/dashboard" className="flex items-center space-x-1">
+                          <Home className="w-4 h-4" />
+                          <span>Ana Sayfa</span>
+                        </Link>
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                      <BreadcrumbPage className="flex items-center space-x-1">
+                        <PieChart className="w-4 h-4" />
+                        <span>Harcamalar</span>
+                      </BreadcrumbPage>
+                    </BreadcrumbItem>
+                  </BreadcrumbList>
+                </Breadcrumb>
               </div>
             </div>
 
@@ -626,21 +652,6 @@ function ExpensesPageContent() {
             >
               <Plus className="w-4 h-4" />
             </Button>
-          </div>
-
-          {/* Breadcrumb */}
-          <div className="mt-4 flex items-center space-x-4 text-sm text-gray-600">
-            <Link
-              href="/dashboard"
-              className="flex items-center space-x-2 hover:text-gray-900"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              <span>Dashboard</span>
-            </Link>
-            <div className="flex items-center space-x-2">
-              <CalendarIcon className="w-4 h-4" />
-              <span className="text-gray-900 font-medium">Ortak Takvim</span>
-            </div>
           </div>
         </div>
       </header>

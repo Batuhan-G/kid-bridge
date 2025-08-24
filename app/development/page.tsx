@@ -14,16 +14,28 @@ import { DevelopmentInsights } from "@/components/development-insights/developme
 import { DevelopmentPDFReport } from "@/components/development-pdf-report/development-pdf-report";
 import {
   TrendingUp,
-  ArrowLeft,
   Brain,
   Heart,
   Users,
   Zap,
   Plus,
+  Home,
 } from "lucide-react";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import { SidebarTrigger } from "@/components/sidebar-trigger/sidebar-trigger";
+import { Sidebar } from "@/components/sidebar/sidebar";
 import Link from "next/link";
 
 function DevelopmentPageContent() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+
   const children = [
     {
       id: 1,
@@ -32,6 +44,11 @@ function DevelopmentPageContent() {
       avatar: "E",
       school: "Atatürk İlkokulu",
       ageGroup: "school-age",
+      stats: {
+        upcomingEvents: 3,
+        unreadMessages: 1,
+        monthlyExpenses: 1200,
+      },
     },
     {
       id: 2,
@@ -40,6 +57,11 @@ function DevelopmentPageContent() {
       avatar: "C",
       school: "Gazi Ortaokulu",
       ageGroup: "pre-teen",
+      stats: {
+        upcomingEvents: 2,
+        unreadMessages: 2,
+        monthlyExpenses: 800,
+      },
     },
     {
       id: 3,
@@ -48,8 +70,19 @@ function DevelopmentPageContent() {
       avatar: "Z",
       school: "Minik Adımlar Anaokulu",
       ageGroup: "preschool",
+      stats: {
+        upcomingEvents: 1,
+        unreadMessages: 0,
+        monthlyExpenses: 450,
+      },
     },
   ];
+
+  const totalStats = {
+    events: children.reduce((sum, child) => sum + child.stats.upcomingEvents, 0),
+    messages: children.reduce((sum, child) => sum + child.stats.unreadMessages, 0),
+    expenses: children.reduce((sum, child) => sum + child.stats.monthlyExpenses, 0),
+  }
 
   const [selectedChild, setSelectedChild] = useState(children[0]);
 
@@ -133,31 +166,74 @@ function DevelopmentPageContent() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Link href="/dashboard">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Dashboard
-                </Button>
-              </Link>
-              <div className="flex items-center space-x-2">
-                <TrendingUp className="w-6 h-6 text-indigo-600" />
-                <h1 className="text-xl font-bold text-gray-900">
-                  Gelişim Takibi
-                </h1>
-              </div>
-              <ChildSelector
-                children={children}
-                selectedChild={selectedChild}
-                onChildChange={setSelectedChild}
+              {/* Sidebar Trigger */}
+              <SidebarTrigger
+                onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+                totalStats={totalStats}
               />
+
+              {/* Logo and KidBridge - hidden on mobile */}
+              <div className="hidden md:flex items-center space-x-2">
+                <div className="flex items-center justify-center">
+                  <img
+                    src="/kid-bridge-logo1.png"
+                    alt="KidBridge Logo"
+                    className="w-12 h-12 flex-shrink-0"/>
+                </div>
+                <span className="text-xl font-bold text-gray-900 whitespace-nowrap">KidBridge</span>
+              </div>
+              
+              {/* Breadcrumb Navigation - hidden on mobile */}
+              <div className="hidden md:block">
+                <Breadcrumb>
+                  <BreadcrumbList>
+                    <BreadcrumbItem>
+                      <BreadcrumbLink asChild>
+                        <Link href="/dashboard" className="flex items-center space-x-1">
+                          <Home className="w-4 h-4" />
+                          <span>Ana Sayfa</span>
+                        </Link>
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                      <BreadcrumbPage className="flex items-center space-x-1">
+                        <TrendingUp className="w-4 h-4" />
+                        <span>Gelişim</span>
+                      </BreadcrumbPage>
+                    </BreadcrumbItem>
+                  </BreadcrumbList>
+                </Breadcrumb>
+              </div>
+
+              {/* Child Selector - hidden on mobile */}
+            
             </div>
+            <div className="flex items-center space-x-4">
+  <div className="hidden lg:block">
+                <ChildSelector
+                  children={children}
+                  selectedChild={selectedChild}
+                  onChildChange={setSelectedChild}
+                />
+              </div>
             <Button>
               <Plus className="w-4 h-4 mr-2" />
               Gözlem Ekle
             </Button>
+            </div>
           </div>
         </div>
       </header>
+
+      <Sidebar
+        children={children}
+        selectedChild={selectedChild}
+        onChildChange={setSelectedChild}
+        totalStats={totalStats}
+        isOpen={isSidebarOpen}
+        onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+      />
 
       <div className="container mx-auto px-4 py-8">
         {/* Child Info Header */}

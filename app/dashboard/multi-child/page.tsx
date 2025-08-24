@@ -1,6 +1,6 @@
 "use client";
+import { useState } from "react";
 import { AuthGuard } from "@/lib/auth-guard";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -17,12 +17,24 @@ import {
   MessageCircle,
   Users,
   PieChart,
-  ArrowLeft,
   TrendingUp,
+  Home,
 } from "lucide-react";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb"
+import { SidebarTrigger } from "@/components/sidebar-trigger/sidebar-trigger";
+import { Sidebar } from "@/components/sidebar/sidebar";
 import Link from "next/link";
 
 function MultiChildDashboardContent() {
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+
   const children = [
     {
       id: 1,
@@ -61,6 +73,14 @@ function MultiChildDashboardContent() {
       },
     },
   ];
+
+  const [selectedChild, setSelectedChild] = useState(children[0])
+  
+  const totalStats = {
+    events: children.reduce((sum, child) => sum + child.stats.upcomingEvents, 0),
+    messages: children.reduce((sum, child) => sum + child.stats.unreadMessages, 0),
+    expenses: children.reduce((sum, child) => sum + child.stats.monthlyExpenses, 0),
+  }
 
   const recentActivities = [
     {
@@ -105,17 +125,44 @@ function MultiChildDashboardContent() {
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Link href="/dashboard">
-                <Button variant="ghost" size="sm">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Ana Dashboard
-                </Button>
-              </Link>
-              <div className="flex items-center space-x-2">
-                <Users className="w-6 h-6 text-indigo-600" />
-                <h1 className="text-xl font-bold text-gray-900">
-                  Çoklu Çocuk Görünümü
-                </h1>
+              {/* Sidebar Trigger */}
+              <SidebarTrigger
+                onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+                totalStats={totalStats}
+              />
+
+              {/* Logo and KidBridge - hidden on mobile */}
+              <div className="hidden md:flex items-center space-x-2">
+                <div className="flex items-center justify-center">
+                  <img
+                    src="/kid-bridge-logo1.png"
+                    alt="KidBridge Logo"
+                    className="w-12 h-12 flex-shrink-0"/>
+                </div>
+                <span className="text-xl font-bold text-gray-900 whitespace-nowrap">KidBridge</span>
+              </div>
+              
+              {/* Breadcrumb Navigation - hidden on mobile */}
+              <div className="hidden md:block">
+                <Breadcrumb>
+                  <BreadcrumbList>
+                    <BreadcrumbItem>
+                      <BreadcrumbLink asChild>
+                        <Link href="/dashboard" className="flex items-center space-x-1">
+                          <Home className="w-4 h-4" />
+                          <span>Ana Sayfa</span>
+                        </Link>
+                      </BreadcrumbLink>
+                    </BreadcrumbItem>
+                    <BreadcrumbSeparator />
+                    <BreadcrumbItem>
+                      <BreadcrumbPage className="flex items-center space-x-1">
+                        <Users className="w-4 h-4" />
+                        <span>Çoklu Görünüm</span>
+                      </BreadcrumbPage>
+                    </BreadcrumbItem>
+                  </BreadcrumbList>
+                </Breadcrumb>
               </div>
             </div>
             <Badge variant="secondary" className="px-3 py-1">
@@ -124,6 +171,15 @@ function MultiChildDashboardContent() {
           </div>
         </div>
       </header>
+
+      <Sidebar
+        children={children}
+        selectedChild={selectedChild}
+        onChildChange={setSelectedChild}
+        totalStats={totalStats}
+        isOpen={isSidebarOpen}
+        onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
+      />
 
       <div className="container mx-auto px-4 py-8">
         {/* Welcome Section */}
