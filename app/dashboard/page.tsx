@@ -24,7 +24,6 @@ import {
   TrendingUp,
   Clock,
   AlertCircle,
-  LogOut,
   Trash2,
   Check,
   X,
@@ -72,26 +71,6 @@ interface Message {
   unread: boolean;
 }
 
-function LogoutButton() {
-  const { logout, user } = useAuth();
-
-  return (
-    <div className="flex items-center space-x-2">
-      <span className="text-sm text-gray-600 hidden md:block">
-        {user?.firstName} {user?.lastName}
-      </span>
-      <Button 
-        variant="ghost" 
-        size="sm" 
-        onClick={logout}
-        className="flex items-center space-x-1"
-      >
-        <LogOut className="w-4 h-4" />
-        <span className="hidden md:block">Çıkış</span>
-      </Button>
-    </div>
-  );
-}
 
 function DashboardContent() {
   const { toast } = useToast();
@@ -379,52 +358,19 @@ function DashboardContent() {
               />
 
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-                  <Users className="w-5 h-5 text-white" />
+                <div className="flex items-center justify-center">
+                  <img
+                    src="/kid-bridge-logo1.png"
+                    alt="KidBridge Logo"
+                    className="w-12 h-12"/>
                 </div>
-                <span className="text-xl font-bold text-gray-900">OrtakEv</span>
+                <span className="text-xl font-bold text-gray-900">KidBridge</span>
               </div>
             </div>
 
-            {/* Desktop Navigation */}
-            <div className="hidden lg:flex items-center space-x-4">
-              <Select
-                value={selectedChild.id.toString()}
-                onValueChange={(value) =>
-                  setSelectedChild(
-                    children.find((c) => c.id === Number.parseInt(value)) ||
-                      children[0]
-                  )
-                }
-              >
-                <SelectTrigger className="w-48">
-                  <SelectValue>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center text-white text-xs">
-                        {selectedChild.avatar}
-                      </div>
-                      <span>
-                        {selectedChild.name} ({selectedChild.age} yaş)
-                      </span>
-                    </div>
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {children.map((child) => (
-                    <SelectItem key={child.id} value={child.id.toString()}>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center text-white text-xs">
-                          {child.avatar}
-                        </div>
-                        <span>
-                          {child.name} ({child.age} yaş)
-                        </span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <div className="flex items-center space-x-2">
+            {/* Navigation - hide on mobile/tablet, show on desktop (768px+) */}
+            <div className="hidden md:flex items-center space-x-4">
+                 <div className="flex items-center space-x-2">
                 <Popover open={isNotificationsOpen} onOpenChange={setIsNotificationsOpen}>
                   <PopoverTrigger asChild>
                     <Button variant="ghost" size="sm" className="relative">
@@ -486,7 +432,7 @@ function DashboardContent() {
                               if (notification.type === "CONNECTION_ACCEPTED" || notification.type === "CONNECTION_ACCEPTED_BY_ME") {
                                 bgColor = "bg-green-50";
                                 borderColor = "border-l-4 border-l-green-500";
-                              } else if (notification.type === "CONNECTION_REJECTED" || notification.type === "CONNECTION_REJECTED_BY_ME") {
+                              } else if (notification.type === "CONNECTION_REJECTED" || notification.type === "CONNECTION_REJECTED_BY_ME" || notification.type === "CONNECTION_REMOVED" || notification.type === "CONNECTION_REMOVED_BY_ME") {
                                 bgColor = "bg-yellow-50";
                                 borderColor = "border-l-4 border-l-yellow-500";
                               } else if (notification.type === "INVITATION_SENT") {
@@ -564,9 +510,48 @@ function DashboardContent() {
                     </div>
                   </PopoverContent>
                 </Popover>
-                <LogoutButton />
               </div>
+              <Select
+                value={selectedChild.id.toString()}
+                onValueChange={(value) =>
+                  setSelectedChild(
+                    children.find((c) => c.id === Number.parseInt(value)) ||
+                      children[0]
+                  )
+                }
+              >
+                <SelectTrigger className="w-48">
+                  <SelectValue>
+                    <div className="flex items-center space-x-2">
+                      <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center text-white text-xs">
+                        {selectedChild.avatar}
+                      </div>
+                      <span>
+                        {selectedChild.name} ({selectedChild.age} yaş)
+                      </span>
+                    </div>
+                  </SelectValue>
+                </SelectTrigger>
+                <SelectContent>
+                  {children.map((child) => (
+                    <SelectItem key={child.id} value={child.id.toString()}>
+                      <div className="flex items-center space-x-2">
+                        <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center text-white text-xs">
+                          {child.avatar}
+                        </div>
+                        <span>
+                          {child.name} ({child.age} yaş)
+                        </span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+           
             </div>
+
+            {/* Mobile: empty div to maintain layout */}
+            <div className="sm:hidden"></div>
           </div>
         </div>
       </header>
@@ -584,7 +569,7 @@ function DashboardContent() {
         {/* Welcome Section */}
         <div className="mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-            Hoş geldiniz, Ayşe
+            Hoş geldiniz, {user?.firstName || 'Kullanıcı'}
           </h1>
           <p className="text-gray-600">
             {selectedChild.name} için bugün {selectedChild.stats.upcomingEvents}{" "}

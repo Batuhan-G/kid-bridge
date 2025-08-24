@@ -56,8 +56,8 @@ export class ConnectionsService {
           'Bu kullanıcı ile zaten eşleşmiş durumdasınız',
         );
       }
-      if (existingConnection.status === 'REJECTED') {
-        // If the connection was rejected, delete the old record and allow re-invitation
+      if (existingConnection.status === 'REJECTED' || existingConnection.status === 'REMOVED') {
+        // If the connection was rejected or removed, delete the old record and allow re-invitation
         await this.prisma.parentConnection.delete({
           where: { id: existingConnection.id },
         });
@@ -119,6 +119,34 @@ export class ConnectionsService {
         return {
           ...connection,
           requester,
+        };
+      }),
+    );
+
+    return connectionsWithUserInfo;
+  }
+
+  async getSent(userEmail: string) {
+    const connections = await this.prisma.parentConnection.findMany({
+      where: {
+        requesterEmail: userEmail,
+        status: 'PENDING',
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    // Get receiver user info for each connection
+    const connectionsWithUserInfo = await Promise.all(
+      connections.map(async (connection) => {
+        const receiver = await this.prisma.user.findUnique({
+          where: { email: connection.receiverEmail },
+          select: { id: true, firstName: true, lastName: true, email: true },
+        });
+        return {
+          ...connection,
+          receiver,
         };
       }),
     );
@@ -279,5 +307,187 @@ export class ConnectionsService {
       console.error('Failed to create notification:', error);
       // Don't throw error, just log it since notifications are not critical
     }
+  }
+
+  async getConnectionStatus(userEmail: string) {
+    const connection = await this.prisma.parentConnection.findFirst({
+      where: {
+        OR: [
+          { requesterEmail: userEmail, status: 'ACCEPTED' },
+          { receiverEmail: userEmail, status: 'ACCEPTED' },
+        ],
+      },
+    });
+
+    if (!connection) {
+      return { hasConnection: false, connection: null };
+    }
+
+    // Get the other parent's email and user info
+    const coParentEmail =
+      connection.requesterEmail === userEmail
+        ? connection.receiverEmail
+        : connection.requesterEmail;
+
+    const coParentUser = await this.prisma.user.findUnique({
+      where: { email: coParentEmail },
+      select: { id: true, firstName: true, lastName: true, email: true },
+    });
+
+    return {
+      hasConnection: true,
+      connection: {
+        ...connection,
+        coParentEmail,
+        coParentInfo: coParentUser,
+      },
+    };
+  }
+
+  async removeConnection(connectionId: string, userEmail: string) {
+    // Find the connection
+    const connection = await this.prisma.parentConnection.findUnique({
+      where: { id: connectionId },
+    });
+
+    if (!connection) {
+      throw new NotFoundException('Bağlantı bulunamadı');
+    }
+
+    // Check if user is authorized to remove this connection
+    if (
+      connection.requesterEmail !== userEmail &&
+      connection.receiverEmail !== userEmail
+    ) {
+      throw new BadRequestException(
+        'Bu bağlantıyı kaldırma yetkiniz bulunmuyor',
+      );
+    }
+
+    // Only allow removal of accepted connections
+    if (connection.status !== 'ACCEPTED') {
+      throw new BadRequestException(
+        'Yalnızca kabul edilmiş bağlantılar kaldırılabilir',
+      );
+    }
+
+    // Remove cross-parent relationships
+    await this.removeCrossParentRelationships(
+      connection.requesterEmail,
+      connection.receiverEmail,
+    );
+
+    // Update connection status to REMOVED
+    const updatedConnection = await this.prisma.parentConnection.update({
+      where: { id: connectionId },
+      data: { status: 'REMOVED' },
+    });
+
+    // Get the other parent's email
+    const otherParentEmail =
+      connection.requesterEmail === userEmail
+        ? connection.receiverEmail
+        : connection.requesterEmail;
+
+    // Notify both parties
+    await this.createNotification({
+      userEmail,
+      type: 'CONNECTION_REMOVED_BY_ME',
+      title: 'Co-parent bağlantısını kaldırdınız',
+      message: `${otherParentEmail} ile co-parent bağlantınızı kaldırdınız.`,
+    });
+
+    await this.createNotification({
+      userEmail: otherParentEmail,
+      type: 'CONNECTION_REMOVED',
+      title: 'Co-parent bağlantısı kaldırıldı',
+      message: `${userEmail} adresli kullanıcı co-parent bağlantısını kaldırdı.`,
+    });
+
+    return {
+      message: 'Co-parent bağlantısı başarıyla kaldırıldı',
+      connection: updatedConnection,
+    };
+  }
+
+  private async removeCrossParentRelationships(
+    requesterEmail: string,
+    receiverEmail: string,
+  ) {
+    // Get both users
+    const requester = await this.prisma.user.findUnique({
+      where: { email: requesterEmail },
+      include: { children: true },
+    });
+
+    const receiver = await this.prisma.user.findUnique({
+      where: { email: receiverEmail },
+      include: { children: true },
+    });
+
+    if (!requester || !receiver) {
+      throw new NotFoundException('Kullanıcılar bulunamadı');
+    }
+
+    // Remove requester's children from receiver
+    for (const child of requester.children) {
+      await this.prisma.child.update({
+        where: { id: child.id },
+        data: {
+          parents: {
+            disconnect: { id: receiver.id },
+          },
+        },
+      });
+    }
+
+    // Remove receiver's children from requester
+    for (const child of receiver.children) {
+      await this.prisma.child.update({
+        where: { id: child.id },
+        data: {
+          parents: {
+            disconnect: { id: requester.id },
+          },
+        },
+      });
+    }
+  }
+
+  async cancelInvitation(connectionId: string, userEmail: string) {
+    // Find the connection
+    const connection = await this.prisma.parentConnection.findUnique({
+      where: { id: connectionId },
+    });
+
+    if (!connection) {
+      throw new NotFoundException('Davet bulunamadı');
+    }
+
+    // Check if user is the requester
+    if (connection.requesterEmail !== userEmail) {
+      throw new BadRequestException('Sadece gönderin davetleri iptal edebilirsiniz');
+    }
+
+    // Check if connection is still pending
+    if (connection.status !== 'PENDING') {
+      throw new BadRequestException('Sadece bekleyen davetler iptal edilebilir');
+    }
+
+    // Delete the connection
+    await this.prisma.parentConnection.delete({
+      where: { id: connectionId },
+    });
+
+    // Delete related notifications
+    await this.prisma.notification.deleteMany({
+      where: {
+        connectionId: connectionId,
+      },
+    });
+
+    return {
+      message: 'Davet başarıyla iptal edildi',
+    };
   }
 }

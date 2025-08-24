@@ -1,4 +1,4 @@
-import { Injectable, ConflictException } from '@nestjs/common';
+import { Injectable, ConflictException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
@@ -58,6 +58,7 @@ export class AuthService {
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role,
+        createdAt: user.createdAt,
       },
     };
   }
@@ -110,5 +111,184 @@ export class AuthService {
         createdAt: 'desc',
       },
     });
+  }
+
+  async deleteAccount(userEmail: string, emailConfirmation: string) {
+    // Validate email confirmation
+    if (emailConfirmation.toLowerCase() !== userEmail.toLowerCase()) {
+      throw new BadRequestException('Email doğrulaması eşleşmiyor');
+    }
+
+    // Find the user
+    const user = await this.prisma.user.findUnique({
+      where: { email: userEmail },
+      include: { children: true },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Kullanıcı bulunamadı');
+    }
+
+    // Find and remove all co-parent connections
+    const connections = await this.prisma.parentConnection.findMany({
+      where: {
+        OR: [
+          { requesterEmail: userEmail },
+          { receiverEmail: userEmail },
+        ],
+        status: 'ACCEPTED',
+      },
+    });
+
+    // Notify co-parents and remove connections
+    for (const connection of connections) {
+      const coParentEmail = 
+        connection.requesterEmail === userEmail 
+          ? connection.receiverEmail 
+          : connection.requesterEmail;
+
+      // Create notification for co-parent
+      await this.createNotification({
+        userEmail: coParentEmail,
+        type: 'CO_PARENT_ACCOUNT_DELETED',
+        title: 'Co-parent hesabını sildi',
+        message: `${userEmail} adresli kullanıcı hesabını sildi. Co-parent bağlantınız sonlandırıldı.`,
+      });
+
+      // Remove cross-parent relationships
+      await this.removeCrossParentRelationships(userEmail, coParentEmail);
+    }
+
+    // Delete all connections involving this user
+    await this.prisma.parentConnection.deleteMany({
+      where: {
+        OR: [
+          { requesterEmail: userEmail },
+          { receiverEmail: userEmail },
+        ],
+      },
+    });
+
+    // Delete user's notifications
+    await this.prisma.notification.deleteMany({
+      where: { userEmail },
+    });
+
+    // Find user to get ID for relations
+    const userToDelete = await this.prisma.user.findUnique({
+      where: { email: userEmail },
+      select: { id: true },
+    });
+
+    if (userToDelete) {
+      // Delete user's messages
+      await this.prisma.message.deleteMany({
+        where: {
+          OR: [
+            { senderId: userToDelete.id },
+            { receiverId: userToDelete.id },
+          ],
+        },
+      });
+
+      // Delete user's expenses
+      await this.prisma.expense.deleteMany({
+        where: { createdById: userToDelete.id },
+      });
+
+      // Delete user's activities
+      await this.prisma.activity.deleteMany({
+        where: { createdById: userToDelete.id },
+      });
+    }
+
+    // Soft delete user (mark as inactive)
+    await this.prisma.user.update({
+      where: { email: userEmail },
+      data: { 
+        isActive: false,
+        email: `deleted_${Date.now()}_${userEmail}`, // Prevent email conflicts
+        firstName: 'DELETED',
+        lastName: 'USER',
+      },
+    });
+
+    return {
+      message: 'Hesabınız başarıyla silindi. Co-parent bildirimler gönderildi.',
+    };
+  }
+
+  private async createNotification({
+    userEmail,
+    type,
+    title,
+    message,
+  }: {
+    userEmail: string;
+    type: string;
+    title: string;
+    message: string;
+  }) {
+    try {
+      await this.prisma.notification.create({
+        data: {
+          userEmail,
+          type,
+          title,
+          message,
+          actionable: false,
+        },
+      });
+    } catch (error) {
+      console.error('Failed to create notification:', error);
+      // Don't throw error, just log it since notifications are not critical
+    }
+  }
+
+  private async removeCrossParentRelationships(
+    userEmail: string,
+    coParentEmail: string,
+  ) {
+    try {
+      // Get both users
+      const user = await this.prisma.user.findUnique({
+        where: { email: userEmail },
+        include: { children: true },
+      });
+
+      const coParent = await this.prisma.user.findUnique({
+        where: { email: coParentEmail },
+        include: { children: true },
+      });
+
+      if (!user || !coParent) return;
+
+      // Remove user's children from co-parent
+      for (const child of user.children) {
+        await this.prisma.child.update({
+          where: { id: child.id },
+          data: {
+            parents: {
+              disconnect: { id: coParent.id },
+            },
+          },
+        });
+      }
+
+      // Remove co-parent's children from user
+      for (const child of coParent.children) {
+        await this.prisma.child.update({
+          where: { id: child.id },
+          data: {
+            parents: {
+              disconnect: { id: user.id },
+            },
+          },
+        });
+      }
+    } catch (error) {
+      console.error('Failed to remove cross-parent relationships:', error);
+      // Don't throw error, continue with deletion
+    }
   }
 }

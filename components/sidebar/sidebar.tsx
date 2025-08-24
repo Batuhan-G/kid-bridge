@@ -2,13 +2,26 @@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Home, Calendar, PieChart, MessageSquare, TrendingUp, Users, Settings, X } from "lucide-react"
+import { Home, Calendar, PieChart, MessageSquare, TrendingUp, Users, Settings, X, LogOut } from "lucide-react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useAuth } from "@/lib/auth-context"
 import type { SidebarProps } from './sidebar.types'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export function Sidebar({ children, selectedChild, onChildChange, totalStats, isOpen, onToggle }: SidebarProps) {
   const pathname = usePathname()
+  const { logout, user } = useAuth()
 
   const navigationItems = [
     {
@@ -65,26 +78,33 @@ export function Sidebar({ children, selectedChild, onChildChange, totalStats, is
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-                <Home className="w-5 h-5 text-white" />
+              <div className="w-8 h-8 flex items-center justify-center">
+                <img
+                  src="/kid-bridge-logo1.png"
+                  alt="KidBridge Logo"
+                  className="w-8 h-8"
+                />
               </div>
-              <h2 className="text-lg font-semibold text-gray-900">OrtakEv</h2>
+              <h2 className="text-lg font-semibold text-gray-900">KidBridge</h2>
             </div>
             <Button variant="ghost" size="sm" onClick={onToggle}>
               <X className="w-5 h-5" />
             </Button>
           </div>
 
-          {/* Selected Child */}
+          {/* User Profile */}
           <div className="p-4 border-b bg-gray-50">
             <div className="flex items-center space-x-3">
               <Avatar className="w-12 h-12">
-                <AvatarFallback className="bg-indigo-600 text-white text-lg">{selectedChild.avatar}</AvatarFallback>
+                <AvatarFallback className="bg-indigo-600 text-white text-lg">
+                  {user?.firstName?.[0]}{user?.lastName?.[0]}
+                </AvatarFallback>
               </Avatar>
               <div>
-                <h3 className="font-medium text-gray-900">{selectedChild.name}</h3>
-                <p className="text-sm text-gray-600">{selectedChild.age} yaş</p>
-                {selectedChild.school && <p className="text-xs text-gray-500">{selectedChild.school}</p>}
+                <h3 className="font-medium text-gray-900">
+                  {user?.firstName} {user?.lastName}
+                </h3>
+                <p className="text-sm text-gray-600">{user?.email}</p>
               </div>
             </div>
           </div>
@@ -166,14 +186,53 @@ export function Sidebar({ children, selectedChild, onChildChange, totalStats, is
           </div>
 
           {/* Footer */}
-          <div className="p-4 border-t">
+          <div className="p-4 border-t space-y-2">
             <Link
               href="/settings"
-              className="flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 hover:text-gray-900 transition-colors"
+              onClick={onToggle}
+              className={`flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                pathname === "/settings"
+                  ? "bg-indigo-100 text-indigo-700"
+                  : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+              }`}
             >
               <Settings className="w-5 h-5" />
               <span>Ayarlar</span>
             </Link>
+            
+            {/* Logout button with confirmation */}
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <button className="w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors bg-red-50 text-red-600 hover:bg-red-100 hover:text-red-700 border border-red-200">
+                  <LogOut className="w-5 h-5" />
+                  <span>Çıkış</span>
+                </button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Çıkış Yapmak İstiyor Musunuz?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Hesabınızdan çıkış yapacaksınız. Bu işlemi onaylıyor musunuz?
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel asChild>
+                    <Button variant="outline">İptal</Button>
+                  </AlertDialogCancel>
+                  <AlertDialogAction asChild>
+                    <Button
+                      variant="destructive"
+                      onClick={() => {
+                        logout()
+                        onToggle()
+                      }}
+                    >
+                      Çıkış Yap
+                    </Button>
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </div>
       </div>

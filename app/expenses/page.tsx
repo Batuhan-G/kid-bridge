@@ -92,12 +92,9 @@ function ExpensesPageContent() {
 
   // Load data on component mount - but only when authenticated
   useEffect(() => {
-    console.log('ExpensesPage useEffect: checking auth state', { isAuthenticated, authUser });
     if (isAuthenticated && authUser) {
-      console.log('User is authenticated, loading initial data...');
       loadInitialData();
     } else {
-      console.log('User not authenticated yet, skipping data load');
     }
   }, [isAuthenticated, authUser]);
 
@@ -136,8 +133,6 @@ function ExpensesPageContent() {
   const loadInitialData = async () => {
     try {
       setIsLoading(true);
-      console.log('=== Starting loadInitialData ===');
-      
       // Verify we have authentication
       if (!api.isAuthenticated()) {
         console.error('No authentication token available');
@@ -146,31 +141,23 @@ function ExpensesPageContent() {
       }
       
       // Load user profile
-      console.log('Loading user profile...');
       const profileResponse = await api.getProfile();
-      console.log('Profile API response:', profileResponse);
       if (profileResponse.data) {
-        console.log('Setting current user:', profileResponse.data);
         setCurrentUser(profileResponse.data);
       } else {
         console.error('Failed to load profile:', profileResponse.error);
       }
 
       // Load children
-      console.log('Loading children for user...');
       const childrenResponse = await api.getChildren();
-      console.log('Children API response:', childrenResponse);
       
       if (childrenResponse.data && childrenResponse.data.length > 0) {
-        console.log('Found children:', childrenResponse.data);
         setChildren(childrenResponse.data);
         if (!selectedChild) {
-          console.log('Setting selected child to first child:', childrenResponse.data[0]);
           setSelectedChild(childrenResponse.data[0]);
           // useEffect will handle loading expenses and stats
         }
       } else {
-        console.log('No children found for user. Response:', childrenResponse);
         setChildren([]);
       }
 
@@ -182,7 +169,6 @@ function ExpensesPageContent() {
       console.error('Error loading initial data:', error);
       setErrorMessage("Veri yüklenirken bir hata oluştu");
     } finally {
-      console.log('=== Finished loadInitialData ===');
       setIsLoading(false);
     }
   };

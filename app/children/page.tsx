@@ -19,13 +19,11 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Users, Plus, ArrowLeft, Upload, FileText, ImageIcon, Calendar, Heart, UserPlus } from "lucide-react"
+import { Users, Plus, ArrowLeft, Upload, FileText, ImageIcon, Calendar, Heart } from "lucide-react"
 import Link from "next/link"
-import { InviteCoParentModal } from "@/components/invite-co-parent-modal/invite-co-parent-modal"
 
 function ChildrenPageContent() {
   const [isAddChildOpen, setIsAddChildOpen] = useState(false)
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
 
   const children = [
     {
@@ -150,13 +148,6 @@ function ChildrenPageContent() {
               </div>
             </div>
             <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                onClick={() => setIsInviteModalOpen(true)}
-              >
-                <UserPlus className="w-4 h-4 mr-2" />
-                Co-Parent Ekle
-              </Button>
               <Dialog open={isAddChildOpen} onOpenChange={setIsAddChildOpen}>
                 <DialogTrigger asChild>
                   <Button>
@@ -354,15 +345,6 @@ function ChildrenPageContent() {
           ))}
         </div>
       </div>
-
-      <InviteCoParentModal 
-        open={isInviteModalOpen}
-        onOpenChange={setIsInviteModalOpen}
-        onSuccess={() => {
-          // Could refresh children list here if needed
-          console.log('Co-parent invitation sent successfully')
-        }}
-      />
     </div>
   )
 }

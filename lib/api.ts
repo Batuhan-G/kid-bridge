@@ -13,6 +13,8 @@ export interface User {
   firstName: string;
   lastName: string;
   role: string;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface Child {
@@ -209,33 +211,26 @@ class ApiClient {
   isAuthenticated(): boolean {
     const token = this.getAuthToken();
     if (!token) {
-      console.log('isAuthenticated: No token found');
       return false;
     }
     
     try {
-      // Check if token is expired (basic check)
       const parts = token.split('.');
       if (parts.length !== 3) {
-        console.log('isAuthenticated: Invalid token format');
         this.removeAuthToken();
         return false;
       }
       
       const payload = JSON.parse(atob(parts[1]));
-      const exp = payload.exp * 1000; // Convert to milliseconds
+      const exp = payload.exp * 1000;
       const isValid = Date.now() < exp;
-      console.log('isAuthenticated: Token valid?', isValid);
       
       if (!isValid) {
-        console.log('isAuthenticated: Token expired, removing');
         this.removeAuthToken();
       }
       
       return isValid;
     } catch (error) {
-      // Invalid token format
-      console.log('isAuthenticated: Token parse error, removing token');
       this.removeAuthToken();
       return false;
     }
@@ -439,6 +434,10 @@ class ApiClient {
     return this.request('/connections/pending');
   }
 
+  async getSentInvitations(): Promise<ApiResponse<any[]>> {
+    return this.request('/connections/sent');
+  }
+
   async acceptConnection(connectionId: string): Promise<ApiResponse<any>> {
     return this.request(`/connections/${connectionId}/accept`, {
       method: 'PATCH',
@@ -485,6 +484,30 @@ class ApiClient {
   async rejectConnectionFromNotification(notificationId: string): Promise<ApiResponse<any>> {
     return this.request(`/notifications/${notificationId}/reject-connection`, {
       method: 'POST',
+    });
+  }
+
+  // New connection methods
+  async getConnectionStatus(): Promise<ApiResponse<any>> {
+    return this.request('/connections/status');
+  }
+
+  async removeConnection(connectionId: string): Promise<ApiResponse<any>> {
+    return this.request(`/connections/${connectionId}`, {
+      method: 'DELETE',
+    });
+  }
+  async cancelInvitation(connectionId: string): Promise<ApiResponse<any>> {
+    return this.request(`/connections/sent/${connectionId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Account management
+  async deleteAccount(emailConfirmation: string): Promise<ApiResponse<any>> {
+    return this.request('/auth/account', {
+      method: 'DELETE',
+      body: JSON.stringify({ emailConfirmation }),
     });
   }
 }

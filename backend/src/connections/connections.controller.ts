@@ -5,6 +5,7 @@ import {
   Body,
   Patch,
   Param,
+  Delete,
   UseGuards,
   Request,
 } from '@nestjs/common';
@@ -27,6 +28,11 @@ export class ConnectionsController {
     return this.connectionsService.getPending(req.user.email);
   }
 
+  @Get('sent')
+  getSent(@Request() req) {
+    return this.connectionsService.getSent(req.user.email);
+  }
+
   @Patch(':id/accept')
   accept(@Param('id') id: string, @Request() req) {
     return this.connectionsService.updateConnection(
@@ -43,5 +49,20 @@ export class ConnectionsController {
       { status: 'REJECTED' },
       req.user.email,
     );
+  }
+
+  @Get('status')
+  getConnectionStatus(@Request() req) {
+    return this.connectionsService.getConnectionStatus(req.user.email);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string, @Request() req) {
+    return this.connectionsService.removeConnection(id, req.user.email);
+  }
+
+  @Delete('sent/:id')
+  cancelInvitation(@Param('id') id: string, @Request() req) {
+    return this.connectionsService.cancelInvitation(id, req.user.email);
   }
 }

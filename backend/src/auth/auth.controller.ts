@@ -5,6 +5,7 @@ import {
   UseGuards,
   Request,
   Get,
+  Delete,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -36,5 +37,11 @@ export class AuthController {
   @Get('users')
   async getAllUsers() {
     return this.authService.findAllUsers();
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete('account')
+  async deleteAccount(@Request() req, @Body() body: { emailConfirmation: string }) {
+    return this.authService.deleteAccount(req.user.email, body.emailConfirmation);
   }
 }

@@ -1,10 +1,7 @@
-'use client';
-
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar, MessageCircle, Users, PieChart, Brain, Shield } from "lucide-react"
 import Link from "next/link"
-import { GuestOnly } from "@/lib/auth-guard"
 
 function LandingContent() {
   return (
@@ -13,10 +10,14 @@ function LandingContent() {
       <header className="container mx-auto px-4 py-6">
         <nav className="flex items-center justify-between">
           <div className="flex items-center space-x-2">
-            <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <Users className="w-5 h-5 text-white" />
+            <div className="flex items-center justify-center">
+              <img
+                src="/kid-bridge-logo1.png"
+                alt="KidBridge Logo"
+                className="w-12 h-12"
+              />
             </div>
-            <span className="text-2xl font-bold text-gray-900">OrtakEv</span>
+            <span className="text-2xl font-bold text-gray-900">KidBridge</span>
           </div>
           <div className="flex items-center space-x-4">
             <Link href="/login">
@@ -54,7 +55,7 @@ function LandingContent() {
 
       {/* Features */}
       <section className="container mx-auto px-4 py-16">
-        <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">Neden OrtakEv?</h2>
+        <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">Neden KidBridge?</h2>
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           <Card className="text-center">
             <CardHeader>
@@ -111,7 +112,7 @@ function LandingContent() {
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-3xl font-bold text-white mb-6">Çocuklarınız İçin Daha İyi Bir Gelecek Başlıyor</h2>
           <p className="text-xl text-indigo-100 mb-8 max-w-2xl mx-auto">
-            Binlerce aile OrtakEv ile daha sağlıklı iletişim kuruyor. Siz de bu değişimin parçası olun.
+            Binlerce aile KidBridge ile daha sağlıklı iletişim kuruyor. Siz de bu değişimin parçası olun.
           </p>
           <Link href="/register">
             <Button size="lg" variant="secondary" className="px-8 py-3">
@@ -127,10 +128,14 @@ function LandingContent() {
           <div className="grid md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
-                  <Users className="w-5 h-5 text-white" />
+                <div className="flex items-center justify-center">
+                  <img
+                    src="/kid-bridge-logo1.png"
+                    alt="KidBridge Logo"
+                    className="w-12 h-12"
+                  />
                 </div>
-                <span className="text-xl font-bold">OrtakEv</span>
+                <span className="text-xl font-bold">KidBridge</span>
               </div>
               <p className="text-gray-400">Çocuklar için daha iyi bir gelecek inşa ediyoruz.</p>
             </div>
@@ -178,7 +183,7 @@ function LandingContent() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 OrtakEv. Tüm hakları saklıdır.</p>
+            <p>&copy; 2024 KidBridge. Tüm hakları saklıdır.</p>
           </div>
         </div>
       </footer>

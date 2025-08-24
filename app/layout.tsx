@@ -3,7 +3,7 @@ import './globals.css'
 import { AuthProvider } from '@/lib/auth-context'
 
 export const metadata: Metadata = {
-  title: 'OrtakEv - Çocuklar İçin Ortak Gelecek',
+  title: 'KidBridge - Çocuklar İçin Ortak Gelecek',
   description: 'Boşanmış ebeveynler için güvenli iletişim ve çocuk yönetim platformu',
 }
 

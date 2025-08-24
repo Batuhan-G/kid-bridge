@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { useToast } from "@/hooks/use-toast"
 import { api } from "@/lib/api"
-import { UserPlus, Loader2, X } from "lucide-react"
+import { UserPlus, Loader2, X, AlertCircle } from "lucide-react"
 
 interface InviteCoParentModalProps {
   open: boolean
@@ -19,17 +19,15 @@ export function InviteCoParentModal({ open, onOpenChange, onSuccess }: InviteCoP
   const [email, setEmail] = useState("")
   const [message, setMessage] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
   const { toast } = useToast()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError("")
     
     if (!email.trim()) {
-      toast({
-        title: "Hata",
-        description: "Email adresi gereklidir",
-        variant: "destructive",
-      })
+      setError("Email adresi gereklidir")
       return
     }
 
@@ -59,6 +57,7 @@ export function InviteCoParentModal({ open, onOpenChange, onSuccess }: InviteCoP
           errorMessage = "Bağlantı hatası. İnternet bağlantınızı kontrol edin."
         }
 
+        setError(errorMessage)
         toast({
           title: "Hata",
           description: errorMessage,
@@ -86,6 +85,7 @@ export function InviteCoParentModal({ open, onOpenChange, onSuccess }: InviteCoP
         }
       }
       
+      setError(errorMessage)
       toast({
         title: "Hata",
         description: errorMessage,
@@ -100,6 +100,7 @@ export function InviteCoParentModal({ open, onOpenChange, onSuccess }: InviteCoP
     if (!isLoading) {
       setEmail("")
       setMessage("")
+      setError("")
       onOpenChange(false)
     }
   }
@@ -134,6 +135,15 @@ export function InviteCoParentModal({ open, onOpenChange, onSuccess }: InviteCoP
               <X className="w-5 h-5" />
             </button>
           </div>
+
+          {error && (
+            <div className="flex items-start space-x-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <AlertCircle className="w-5 h-5 text-red-600 mt-0.5" />
+              <div>
+                <p className="text-sm text-red-700">{error}</p>
+              </div>
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">

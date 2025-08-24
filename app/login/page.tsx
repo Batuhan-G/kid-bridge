@@ -66,7 +66,6 @@ function LoginForm() {
       const result = await login(formData.email.trim(), formData.password)
       
       if (result.success) {
-        console.log("Login successful, redirecting...")
       } else {
         setError(result.error || "Giriş başarısız oldu. Lütfen bilgilerinizi kontrol edin.")
       }
@@ -83,10 +82,14 @@ function LoginForm() {
       <Card className="w-full max-w-md">
         <CardHeader className="text-center">
           <div className="flex items-center justify-center space-x-2 mb-4">
-            <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center">
-              <Users className="w-6 h-6 text-white" />
+            <div className="flex items-center justify-center">
+              <img
+                src="/kid-bridge-logo1.png"
+                alt="KidBridge Logo"
+                className="w-12 h-12"
+              />
             </div>
-            <span className="text-2xl font-bold text-gray-900">OrtakEv</span>
+            <span className="text-2xl font-bold text-gray-900">KidBridge</span>
           </div>
           <CardTitle>Hesabınıza Giriş Yapın</CardTitle>
           <CardDescription>Çocuklarınızla ilgili tüm bilgilere erişim sağlayın</CardDescription>

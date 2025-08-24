@@ -188,7 +188,7 @@ Genel Gelişim Skoru: ${overallScore.toFixed(0)}%
 - Sosyal oyunları destekleyin
 - Duygusal gelişimi takip edin
 
-Bu rapor OrtakEv platformu tarafından oluşturulmuştur.
+Bu rapor KidBridge platformu tarafından oluşturulmuştur.
 Tarih: ${new Date().toLocaleDateString("tr-TR")}
 `
 

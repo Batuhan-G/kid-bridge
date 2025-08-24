@@ -49,7 +49,7 @@ async function createPDFContent(doc: any, child: any, developmentData: any, repo
   // Header
   doc.setFontSize(24)
   doc.setTextColor(79, 70, 229)
-  doc.text("OrtakEv", 20, yPosition)
+  doc.text("KidBridge", 20, yPosition)
 
   doc.setFontSize(12)
   doc.setTextColor(107, 114, 128)
@@ -179,7 +179,7 @@ async function createPDFContent(doc: any, child: any, developmentData: any, repo
   doc.setFontSize(10)
   doc.setTextColor(107, 114, 128)
   doc.text(
-    `Bu rapor OrtakEv platformu tarafından otomatik olarak oluşturulmuştur. • ${new Date().toLocaleDateString("tr-TR")}`,
+    `Bu rapor KidBridge platformu tarafından otomatik olarak oluşturulmuştur. • ${new Date().toLocaleDateString("tr-TR")}`,
     20,
     pageHeight - 20,
   )
