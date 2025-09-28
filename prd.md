@@ -101,12 +101,20 @@ Güvenli, şeffaf ve yapılandırılmış bir platform ile:
 
 ### 3.2 Backend Teknolojileri
 - **Framework**: NestJS + TypeScript
-- **Database**: PostgreSQL
+- **Database**: PostgreSQL (Production) / SQLite (Development)
 - **ORM**: Prisma
 - **Authentication**: JWT + Passport.js
+- **Validation**: class-validator + class-transformer
 - **File Storage**: AWS S3 / Cloudinary
 - **Real-time**: Server-Sent Events (SSE)
 - **Caching**: Redis
+
+#### Backend Architecture Details
+- **Modular Structure**: Angular-style modular organization with Dependency Injection
+- **Type Safety**: Full TypeScript support with Prisma type-safe ORM
+- **Security**: bcrypt password hashing, JWT tokens, input validation, CORS protection
+- **Error Handling**: Comprehensive error handling for validation, authentication, and database errors
+- **Development Setup**: Node.js 20+, npm/yarn, Prisma migrations
 
 ### 3.3 DevOps ve Deployment
 - **Frontend Hosting**: Vercel
@@ -300,6 +308,58 @@ Güvenli, şeffaf ve yapılandırılmış bir platform ile:
 - Prisma schema supports both databases
 - Switch to PostgreSQL during production deployment
 - Data migration scripts will be prepared
+
+---
+
+## Backend API Endpoints
+
+### Authentication
+- `POST /auth/register` - Kullanıcı kaydı
+- `POST /auth/login` - Kullanıcı girişi
+- `GET /auth/profile` - Kullanıcı profili (JWT gerekli)
+
+### Children Management
+- `GET /children` - Kullanıcının çocuklarını listele
+- `POST /children` - Yeni çocuk profili oluştur
+- `GET /children/:id` - Çocuk detaylarını getir
+- `PATCH /children/:id` - Çocuk bilgilerini güncelle
+- `DELETE /children/:id` - Çocuk profilini sil (soft delete)
+- `POST /children/:id/parents` - Çocuğa yeni ebeveyn ekle
+
+### Messaging System
+- `POST /messages` - Mesaj gönder
+- `GET /messages` - Mesajları listele (pagination, filters)
+- `GET /messages/:id` - Mesaj detaylarını getir
+- `PATCH /messages/:id` - Mesajı okundu olarak işaretle
+- `GET /messages/unread-count` - Okunmamış mesaj sayısı
+- `GET /messages/conversation/:otherUserId/:childId` - İki ebeveyn arası konuşma
+- `PATCH /messages/mark-all-read` - Tüm mesajları okundu işaretle
+
+### Environment Variables
+```bash
+# Database
+DATABASE_URL="postgresql://username:password@localhost:5432/kidbridge?schema=public"
+
+# JWT
+JWT_SECRET="your-super-secret-jwt-key"
+JWT_EXPIRATION="7d"
+
+# App
+PORT=3001
+NODE_ENV="development"
+
+# CORS
+CORS_ORIGIN="http://localhost:3000"
+```
+
+### Database Schema Overview
+- **User**: Ebeveyn kullanıcıları ✅
+- **Child**: Çocuk profilleri ✅
+- **Message**: Ebeveynler arası mesajlar ✅
+- **Expense**: Harcama kayıtları (Schema hazır)
+- **Activity**: Etkinlik planlaması (Schema hazır)
+- **Document**: Dosya/belge yönetimi (Schema hazır)
+- **Milestone**: Gelişim kilometre taşları (Schema hazır)
 
 ---
 
