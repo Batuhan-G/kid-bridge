@@ -6,24 +6,23 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Calendar, MessageCircle, PieChart } from "lucide-react"
 import type { MultiChildStatsProps } from './multi-child-stats.types'
 
-interface Child {
-  id: number
-  name: string
-  age: number
-  avatar: string
-  stats: {
-    upcomingEvents: number
-    unreadMessages: number
-    monthlyExpenses: number
-    lastActivity: string
-  }
-}
-
 export function MultiChildStats({ children }: MultiChildStatsProps) {
+  // Calculate child age helper
+  const calculateChildAge = (dateOfBirth: string) => {
+    const birth = new Date(dateOfBirth)
+    const today = new Date()
+    let age = today.getFullYear() - birth.getFullYear()
+    const monthDiff = today.getMonth() - birth.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--
+    }
+    return age
+  }
+
   const totalStats = {
-    events: children.reduce((sum, child) => sum + child.stats.upcomingEvents, 0),
-    messages: children.reduce((sum, child) => sum + child.stats.unreadMessages, 0),
-    expenses: children.reduce((sum, child) => sum + child.stats.monthlyExpenses, 0),
+    events: children.reduce((sum, child) => sum + (child._count?.activities || 0), 0),
+    messages: children.reduce((sum, child) => sum + (child._count?.messages || 0), 0),
+    expenses: children.reduce((sum, child) => sum + (child._count?.expenses || 0), 0),
   }
 
   return (
@@ -60,7 +59,7 @@ export function MultiChildStats({ children }: MultiChildStatsProps) {
               <PieChart className="w-5 h-5 text-blue-600" />
               <div>
                 <p className="text-sm text-gray-600">Toplam Harcama</p>
-                <p className="text-xl font-bold">₺{totalStats.expenses}</p>
+                <p className="text-xl font-bold">{totalStats.expenses} Adet</p>
               </div>
             </div>
           </CardContent>
@@ -79,32 +78,36 @@ export function MultiChildStats({ children }: MultiChildStatsProps) {
               <div key={child.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                 <div className="flex items-center space-x-4">
                   <Avatar className="w-12 h-12">
-                    <AvatarFallback className="bg-indigo-600 text-white text-lg">{child.avatar}</AvatarFallback>
+                    <AvatarFallback className="bg-indigo-600 text-white text-lg">
+                      {child.firstName.charAt(0).toUpperCase()}
+                    </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="font-medium">{child.name}</h3>
-                    <p className="text-sm text-gray-600">{child.age} yaşında</p>
+                    <h3 className="font-medium">{child.firstName} {child.lastName}</h3>
+                    <p className="text-sm text-gray-600">{calculateChildAge(child.dateOfBirth)} yaşında</p>
                   </div>
                 </div>
 
                 <div className="flex items-center space-x-6">
                   <div className="text-center">
                     <p className="text-sm text-gray-600">Etkinlik</p>
-                    <Badge variant="secondary">{child.stats.upcomingEvents}</Badge>
+                    <Badge variant="secondary">{child._count?.activities || 0}</Badge>
                   </div>
                   <div className="text-center">
                     <p className="text-sm text-gray-600">Mesaj</p>
-                    <Badge variant={child.stats.unreadMessages > 0 ? "destructive" : "secondary"}>
-                      {child.stats.unreadMessages}
+                    <Badge variant={(child._count?.messages || 0) > 0 ? "destructive" : "secondary"}>
+                      {child._count?.messages || 0}
                     </Badge>
                   </div>
                   <div className="text-center">
                     <p className="text-sm text-gray-600">Harcama</p>
-                    <p className="font-medium">₺{child.stats.monthlyExpenses}</p>
+                    <p className="font-medium">{child._count?.expenses || 0} Adet</p>
                   </div>
                   <div className="text-center">
-                    <p className="text-sm text-gray-600">Son Aktivite</p>
-                    <p className="text-xs text-gray-500">{child.stats.lastActivity}</p>
+                    <p className="text-sm text-gray-600">Son Güncelleme</p>
+                    <p className="text-xs text-gray-500">
+                      {new Date(child.updatedAt).toLocaleDateString('tr-TR')}
+                    </p>
                   </div>
                 </div>
               </div>

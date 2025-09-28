@@ -1,19 +1,9 @@
+import { Child } from "@/lib/api"
+
 export interface SidebarProps {
-  children: Array<{
-    id: number
-    name: string
-    age: number
-    avatar: string
-    school?: string
-  }>
-  selectedChild: {
-    id: number
-    name: string
-    age: number
-    avatar: string
-    school?: string
-  }
-  onChildChange: (child: any) => void
+  children: Child[]
+  selectedChild: Child | null
+  onChildChange: (child: Child) => void
   totalStats: {
     events: number
     messages: number

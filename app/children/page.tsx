@@ -1,7 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { AuthGuard } from "@/lib/auth-guard"
+import { api, type Child, type Milestone, type Document } from "@/lib/api"
+import { useToast } from "@/hooks/use-toast"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -27,128 +29,411 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import { Users, Plus, Upload, FileText, ImageIcon, Calendar, Heart, Bell, Home } from "lucide-react"
+import { Users, Plus, Upload, FileText, Calendar, Heart, Home, LayoutGrid, List } from "lucide-react"
 import Link from "next/link"
 import { SidebarTrigger } from "@/components/sidebar-trigger/sidebar-trigger"
 import { Sidebar } from "@/components/sidebar/sidebar"
 
 function ChildrenPageContent() {
+  const { toast } = useToast()
   const [isAddChildOpen, setIsAddChildOpen] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [children, setChildren] = useState<Child[]>([])
+  const [loadingChildren, setLoadingChildren] = useState(true)
+  const [isAddMilestoneOpen, setIsAddMilestoneOpen] = useState(false)
+  const [isAddDocumentOpen, setIsAddDocumentOpen] = useState(false)
+  const [selectedMilestone, setSelectedMilestone] = useState<Milestone | null>(null)
+  const [isEditMilestoneOpen, setIsEditMilestoneOpen] = useState(false)
+  const [currentChildId, setCurrentChildId] = useState<string>("")
+  const [milestones, setMilestones] = useState<Record<string, Milestone[]>>({})
+  const [documents, setDocuments] = useState<Record<string, Document[]>>({})
+  const [loadingMilestones, setLoadingMilestones] = useState<Record<string, boolean>>({})
+  const [loadingDocuments, setLoadingDocuments] = useState<Record<string, boolean>>({})
+  
+  // Milestone form state
+  const [milestoneForm, setMilestoneForm] = useState({
+    title: "",
+    description: "",
+    category: "",
+    achievedAt: "",
+    notes: ""
+  })
+  
+  // Document form state
+  const [documentForm, setDocumentForm] = useState({
+    title: "",
+    description: "",
+    file: null as File | null
+  })
 
-  const children = [
-    {
-      id: 1,
-      name: "Elif",
-      age: 8,
-      birthDate: "2015-03-15",
-      school: "Atatürk İlkokulu",
-      grade: "3. Sınıf",
-      avatar: "E",
-      healthInfo: "Astım tedavisi görüyor",
-      notes: "Matematik konusunda destek gerekiyor",
-      stats: {
-        upcomingEvents: 3,
-        unreadMessages: 1,
-        monthlyExpenses: 1200,
-      },
-    },
-    {
-      id: 2,
-      name: "Can",
-      age: 12,
-      birthDate: "2011-07-22",
-      school: "Gazi Ortaokulu",
-      grade: "7. Sınıf",
-      avatar: "C",
-      healthInfo: "Sağlıklı",
-      notes: "Spor aktivitelerine çok ilgili",
-      stats: {
-        upcomingEvents: 2,
-        unreadMessages: 2,
-        monthlyExpenses: 800,
-      },
-    },
-    {
-      id: 3,
-      name: "Zeynep",
-      age: 6,
-      birthDate: "2017-11-10",
-      school: "Minik Adımlar Anaokulu",
-      grade: "Büyük Grup",
-      avatar: "Z",
-      healthInfo: "Alerji testleri yapılacak",
-      notes: "Sosyal gelişimi çok iyi",
-      stats: {
-        upcomingEvents: 1,
-        unreadMessages: 0,
-        monthlyExpenses: 450,
-      },
-    },
-  ]
+  // Child form state
+  const [childForm, setChildForm] = useState({
+    firstName: "",
+    lastName: "",
+    dateOfBirth: "",
+    gender: "",
+    notes: "",
+    profileImageUrl: ""
+  })
+  
+  // Date picker state
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined)
+  
+  // Form validation errors
+  const [validationErrors, setValidationErrors] = useState<Record<string, string>>({})
 
-  const [selectedChild, setSelectedChild] = useState(children[0])
+  // Load children on mount
+  useEffect(() => {
+    loadChildren()
+  }, [])
+
+  // Load children from API
+  const loadChildren = async () => {
+    setLoadingChildren(true)
+    try {
+      const response = await api.getChildren()
+      if (response.data) {
+        setChildren(response.data)
+      } else {
+        toast({
+          title: "Hata",
+          description: response.error || "Çocuklar yüklenemedi",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "Çocuklar yüklenemedi",
+        variant: "destructive"
+      })
+    } finally {
+      setLoadingChildren(false)
+    }
+  }
+
+  // Calculate stats for sidebar from actual children data
+  const calculateChildAge = (dateOfBirth: string) => {
+    const birth = new Date(dateOfBirth)
+    const today = new Date()
+    let age = today.getFullYear() - birth.getFullYear()
+    const monthDiff = today.getMonth() - birth.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--
+    }
+    return age
+  }
+
+  const [selectedChild, setSelectedChild] = useState<Child | null>(null)
+  
+  // Select first child when children are loaded
+  useEffect(() => {
+    if (children.length > 0 && !selectedChild) {
+      setSelectedChild(children[0])
+    }
+  }, [children, selectedChild])
   
   const totalStats = {
-    events: children.reduce((sum, child) => sum + child.stats.upcomingEvents, 0),
-    messages: children.reduce((sum, child) => sum + child.stats.unreadMessages, 0),
-    expenses: children.reduce((sum, child) => sum + child.stats.monthlyExpenses, 0),
+    events: 0, // Will be implemented with calendar feature
+    messages: 0, // Will be implemented with messaging feature  
+    expenses: 0, // Will be calculated from actual expenses
   }
 
-  const getChildFiles = (childId: number) => {
-    const allFiles = {
-      1: [
-        { id: 1, name: "Karne - 1. Dönem", type: "document", date: "2024-01-10", size: "2.3 MB" },
-        { id: 2, name: "Sağlık Raporu", type: "document", date: "2024-01-05", size: "1.8 MB" },
-      ],
-      2: [
-        { id: 3, name: "Spor Kulübü Belgesi", type: "document", date: "2024-01-08", size: "1.2 MB" },
-        { id: 4, name: "Okul Fotoğrafı", type: "image", date: "2023-12-20", size: "4.2 MB" },
-      ],
-      3: [
-        { id: 5, name: "Anaokulu Raporu", type: "document", date: "2024-01-12", size: "1.5 MB" },
-        { id: 6, name: "Oyun Etkinliği", type: "image", date: "2024-01-10", size: "3.8 MB" },
-      ],
+  // Validate form function
+  const validateForm = () => {
+    const errors: Record<string, string> = {}
+    
+    if (!childForm.firstName.trim()) {
+      errors.firstName = "Ad zorunludur"
     }
-    return allFiles[childId as keyof typeof allFiles] || []
-  }
-
-  const getChildNotes = (childId: number) => {
-    const allNotes = {
-      1: [
-        {
-          id: 1,
-          date: "2024-01-10",
-          author: "Anne",
-          note: "Matematik konusunda ilerleme kaydediyor. Çarpım tablosunu öğrendi.",
-          category: "Akademik",
-        },
-      ],
-      2: [
-        {
-          id: 2,
-          date: "2024-01-08",
-          author: "Baba",
-          note: "Basketbol takımına seçildi. Çok mutlu.",
-          category: "Sosyal",
-        },
-      ],
-      3: [
-        {
-          id: 3,
-          date: "2024-01-12",
-          author: "Anne",
-          note: "Anaokulu öğretmeni sosyal gelişiminin çok iyi olduğunu söyledi.",
-          category: "Sosyal",
-        },
-      ],
+    
+    if (!childForm.lastName.trim()) {
+      errors.lastName = "Soyad zorunludur"
     }
-    return allNotes[childId as keyof typeof allNotes] || []
+    
+    if (!childForm.dateOfBirth) {
+      errors.dateOfBirth = "Doğum tarihi zorunludur"
+    }
+    
+    if (!childForm.gender) {
+      errors.gender = "Cinsiyet seçimi zorunludur"
+    }
+    
+    setValidationErrors(errors)
+    return Object.keys(errors).length === 0
   }
 
-  const getFileIcon = (type: string) => {
-    return type === "image" ? <ImageIcon className="w-4 h-4" /> : <FileText className="w-4 h-4" />
+  // Add child function
+  const handleAddChild = async () => {
+    if (!validateForm()) {
+      return
+    }
+
+    try {
+      const response = await api.createChild({
+        firstName: childForm.firstName,
+        lastName: childForm.lastName,
+        dateOfBirth: childForm.dateOfBirth,
+        gender: childForm.gender,
+        notes: childForm.notes,
+        profileImageUrl: childForm.profileImageUrl
+      })
+
+      if (response.data) {
+        toast({
+          title: "Başarılı",
+          description: "Çocuk başarıyla eklendi",
+        })
+        // Reset form
+        setChildForm({
+          firstName: "",
+          lastName: "",
+          dateOfBirth: "",
+          gender: "",
+          notes: "",
+          profileImageUrl: ""
+        })
+        setSelectedDate(undefined)
+        setValidationErrors({})
+        setIsAddChildOpen(false)
+        // Reload children
+        loadChildren()
+      } else {
+        toast({
+          title: "Hata",
+          description: response.error || "Çocuk eklenemedi",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "Çocuk eklenemedi",
+        variant: "destructive"
+      })
+    }
   }
+
+  // Milestone categories
+  const milestoneCategories = [
+    "Fiziksel",
+    "Zihinsel", 
+    "Sosyal",
+    "Duygusal",
+    "Akademik",
+    "Sağlık"
+  ]
+
+  // Load milestones for a child
+  const loadMilestones = async (childId: string) => {
+    setLoadingMilestones(prev => ({ ...prev, [childId]: true }))
+    try {
+      const response = await api.getMilestones(childId)
+      if (response.data) {
+        setMilestones(prev => ({ ...prev, [childId]: response.data! }))
+      } else {
+        toast({
+          title: "Hata",
+          description: response.error || "Kilometre taşları yüklenemedi",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Hata", 
+        description: "Kilometre taşları yüklenemedi",
+        variant: "destructive"
+      })
+    } finally {
+      setLoadingMilestones(prev => ({ ...prev, [childId]: false }))
+    }
+  }
+
+  // Load documents for a child
+  const loadDocuments = async (childId: string) => {
+    setLoadingDocuments(prev => ({ ...prev, [childId]: true }))
+    try {
+      const response = await api.getDocuments(childId)
+      if (response.data) {
+        setDocuments(prev => ({ ...prev, [childId]: response.data! }))
+      } else {
+        toast({
+          title: "Hata",
+          description: response.error || "Belgeler yüklenemedi", 
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "Belgeler yüklenemedi",
+        variant: "destructive"
+      })
+    } finally {
+      setLoadingDocuments(prev => ({ ...prev, [childId]: false }))
+    }
+  }
+
+  // Add milestone
+  const handleAddMilestone = async () => {
+    if (!milestoneForm.title || !milestoneForm.category || !milestoneForm.achievedAt) {
+      toast({
+        title: "Hata",
+        description: "Lütfen tüm zorunlu alanları doldurun",
+        variant: "destructive"
+      })
+      return
+    }
+
+    try {
+      const response = await api.createMilestone(currentChildId, milestoneForm)
+      if (response.data) {
+        toast({
+          title: "Başarılı",
+          description: "Kilometre taşı eklendi"
+        })
+        setIsAddMilestoneOpen(false)
+        setMilestoneForm({ title: "", description: "", category: "", achievedAt: "", notes: "" })
+        loadMilestones(currentChildId)
+      } else {
+        toast({
+          title: "Hata",
+          description: response.error || "Kilometre taşı eklenemedi",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "Kilometre taşı eklenemedi",
+        variant: "destructive"
+      })
+    }
+  }
+
+  // Edit milestone
+  const handleEditMilestone = async () => {
+    if (!selectedMilestone) return
+
+    try {
+      const response = await api.updateMilestone(selectedMilestone.id, milestoneForm)
+      if (response.data) {
+        toast({
+          title: "Başarılı",
+          description: "Kilometre taşı güncellendi"
+        })
+        setIsEditMilestoneOpen(false)
+        setSelectedMilestone(null)
+        setMilestoneForm({ title: "", description: "", category: "", achievedAt: "", notes: "" })
+        loadMilestones(currentChildId)
+      } else {
+        toast({
+          title: "Hata",
+          description: response.error || "Kilometre taşı güncellenemedi",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "Kilometre taşı güncellenemedi",
+        variant: "destructive"
+      })
+    }
+  }
+
+  // Delete milestone
+  const handleDeleteMilestone = async (milestoneId: string) => {
+    try {
+      const response = await api.deleteMilestone(milestoneId)
+      if (response.error) {
+        toast({
+          title: "Hata",
+          description: response.error,
+          variant: "destructive"
+        })
+      } else {
+        toast({
+          title: "Başarılı",
+          description: "Kilometre taşı silindi"
+        })
+        loadMilestones(currentChildId)
+      }
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "Kilometre taşı silinemedi",
+        variant: "destructive"
+      })
+    }
+  }
+
+  // Upload document
+  const handleUploadDocument = async () => {
+    if (!documentForm.title || !documentForm.file) {
+      toast({
+        title: "Hata",
+        description: "Lütfen başlık ve dosya seçin",
+        variant: "destructive"
+      })
+      return
+    }
+
+    try {
+      const response = await api.uploadFile(currentChildId, documentForm.file, {
+        title: documentForm.title,
+        description: documentForm.description
+      })
+      if (response.data) {
+        toast({
+          title: "Başarılı",
+          description: "Dosya yüklendi"
+        })
+        setIsAddDocumentOpen(false)
+        setDocumentForm({ title: "", description: "", file: null })
+        loadDocuments(currentChildId)
+      } else {
+        toast({
+          title: "Hata",
+          description: response.error || "Dosya yüklenemedi",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "Dosya yüklenemedi",
+        variant: "destructive"
+      })
+    }
+  }
+
+  // Delete document
+  const handleDeleteDocument = async (documentId: string, childId: string) => {
+    try {
+      const response = await api.deleteDocument(documentId)
+      if (response.error) {
+        toast({
+          title: "Hata",
+          description: response.error,
+          variant: "destructive"
+        })
+      } else {
+        toast({
+          title: "Başarılı",
+          description: "Belge silindi"
+        })
+        loadDocuments(childId)
+      }
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "Belge silinemedi",
+        variant: "destructive"
+      })
+    }
+  }
+
 
   const getCategoryColor = (category: string) => {
     switch (category) {
@@ -212,6 +497,22 @@ function ChildrenPageContent() {
             </div>
             
             <div className="flex items-center space-x-2">
+              {/* View Toggle Buttons */}
+              <div className="flex items-center border rounded-lg overflow-hidden">
+                <Link href="/children">
+                  <Button variant="ghost" size="sm" className="rounded-none border-r bg-indigo-50 text-indigo-600">
+                    <List className="w-4 h-4 mr-1" />
+                    Liste
+                  </Button>
+                </Link>
+                <Link href="/children/multi-view">
+                  <Button variant="ghost" size="sm" className="rounded-none">
+                    <LayoutGrid className="w-4 h-4 mr-1" />
+                    Çoklu
+                  </Button>
+                </Link>
+              </div>
+              
               <Dialog open={isAddChildOpen} onOpenChange={setIsAddChildOpen}>
                 <DialogTrigger asChild>
                   <Button>
@@ -219,45 +520,182 @@ function ChildrenPageContent() {
                     Çocuk Ekle
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="sm:max-w-[425px]">
+                <DialogContent className="sm:max-w-[500px]">
                   <DialogHeader>
                     <DialogTitle>Yeni Çocuk Ekle</DialogTitle>
                     <DialogDescription>Çocuğunuzun bilgilerini girin</DialogDescription>
                   </DialogHeader>
                   <div className="grid gap-4 py-4">
                     <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="name" className="text-right">
-                        Ad Soyad
+                      <Label htmlFor="firstName" className="text-right">
+                        Ad *
                       </Label>
-                      <Input id="name" className="col-span-3" />
+                      <div className="col-span-3">
+                        <Input 
+                          id="firstName" 
+                          className={`w-full ${validationErrors.firstName ? 'border-red-500' : ''}`}
+                          value={childForm.firstName}
+                          onChange={(e) => {
+                            setChildForm({...childForm, firstName: e.target.value})
+                            if (validationErrors.firstName) {
+                              setValidationErrors({...validationErrors, firstName: ""})
+                            }
+                          }}
+                          placeholder="Çocuğun adı"
+                        />
+                        {validationErrors.firstName && (
+                          <p className="text-red-500 text-sm mt-1">{validationErrors.firstName}</p>
+                        )}
+                      </div>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="birthdate" className="text-right">
-                        Doğum Tarihi
+                      <Label htmlFor="lastName" className="text-right">
+                        Soyad *
                       </Label>
-                      <Input id="birthdate" type="date" className="col-span-3" />
+                      <div className="col-span-3">
+                        <Input 
+                          id="lastName" 
+                          className={`w-full ${validationErrors.lastName ? 'border-red-500' : ''}`}
+                          value={childForm.lastName}
+                          onChange={(e) => {
+                            setChildForm({...childForm, lastName: e.target.value})
+                            if (validationErrors.lastName) {
+                              setValidationErrors({...validationErrors, lastName: ""})
+                            }
+                          }}
+                          placeholder="Çocuğun soyadı"
+                        />
+                        {validationErrors.lastName && (
+                          <p className="text-red-500 text-sm mt-1">{validationErrors.lastName}</p>
+                        )}
+                      </div>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="school" className="text-right">
-                        Okul
+                      <Label htmlFor="dateOfBirth" className="text-right">
+                        Doğum Tarihi *
                       </Label>
-                      <Input id="school" className="col-span-3" />
+                      <div className="col-span-3">
+                        <div className="flex gap-2">
+                          <select 
+                            className={`flex h-10 w-full rounded-md border ${validationErrors.dateOfBirth ? 'border-red-500' : 'border-input'} bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring`}
+                            value={childForm.dateOfBirth.split('-')[2] || ""}
+                            onChange={(e) => {
+                              const day = e.target.value
+                              const [year, month] = childForm.dateOfBirth.split('-')
+                              if (year && month && day) {
+                                const newDate = `${year}-${month}-${day.padStart(2, '0')}`
+                                setChildForm({...childForm, dateOfBirth: newDate})
+                                setSelectedDate(new Date(newDate))
+                                if (validationErrors.dateOfBirth) {
+                                  setValidationErrors({...validationErrors, dateOfBirth: ""})
+                                }
+                              }
+                            }}
+                          >
+                            <option value="">Gün</option>
+                            {Array.from({length: 31}, (_, i) => i + 1).map(day => (
+                              <option key={day} value={day}>{day}</option>
+                            ))}
+                          </select>
+                          
+                          <select 
+                            className={`flex h-10 w-full rounded-md border ${validationErrors.dateOfBirth ? 'border-red-500' : 'border-input'} bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring`}
+                            value={childForm.dateOfBirth.split('-')[1] || ""}
+                            onChange={(e) => {
+                              const month = e.target.value
+                              const [year, , day] = childForm.dateOfBirth.split('-')
+                              if (year && month) {
+                                const newDate = `${year}-${month.padStart(2, '0')}-${(day || '01').padStart(2, '0')}`
+                                setChildForm({...childForm, dateOfBirth: newDate})
+                                setSelectedDate(new Date(newDate))
+                                if (validationErrors.dateOfBirth) {
+                                  setValidationErrors({...validationErrors, dateOfBirth: ""})
+                                }
+                              }
+                            }}
+                          >
+                            <option value="">Ay</option>
+                            <option value="1">Ocak</option>
+                            <option value="2">Şubat</option>
+                            <option value="3">Mart</option>
+                            <option value="4">Nisan</option>
+                            <option value="5">Mayıs</option>
+                            <option value="6">Haziran</option>
+                            <option value="7">Temmuz</option>
+                            <option value="8">Ağustos</option>
+                            <option value="9">Eylül</option>
+                            <option value="10">Ekim</option>
+                            <option value="11">Kasım</option>
+                            <option value="12">Aralık</option>
+                          </select>
+                          
+                          <select 
+                            className={`flex h-10 w-full rounded-md border ${validationErrors.dateOfBirth ? 'border-red-500' : 'border-input'} bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring`}
+                            value={childForm.dateOfBirth.split('-')[0] || ""}
+                            onChange={(e) => {
+                              const year = e.target.value
+                              const [, month, day] = childForm.dateOfBirth.split('-')
+                              if (year) {
+                                const newDate = `${year}-${(month || '01').padStart(2, '0')}-${(day || '01').padStart(2, '0')}`
+                                setChildForm({...childForm, dateOfBirth: newDate})
+                                setSelectedDate(new Date(newDate))
+                                if (validationErrors.dateOfBirth) {
+                                  setValidationErrors({...validationErrors, dateOfBirth: ""})
+                                }
+                              }
+                            }}
+                          >
+                            <option value="">Yıl</option>
+                            {Array.from({length: 18}, (_, i) => new Date().getFullYear() - i).map(year => (
+                              <option key={year} value={year}>{year}</option>
+                            ))}
+                          </select>
+                        </div>
+                        {validationErrors.dateOfBirth && (
+                          <p className="text-red-500 text-sm mt-1">{validationErrors.dateOfBirth}</p>
+                        )}
+                      </div>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="grade" className="text-right">
-                        Sınıf
+                      <Label htmlFor="gender" className="text-right">
+                        Cinsiyet *
                       </Label>
-                      <Input id="grade" className="col-span-3" />
+                      <div className="col-span-3">
+                        <select 
+                          id="gender" 
+                          className={`flex h-10 w-full rounded-md border ${validationErrors.gender ? 'border-red-500' : 'border-input'} bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50`}
+                          value={childForm.gender}
+                          onChange={(e) => {
+                            setChildForm({...childForm, gender: e.target.value})
+                            if (validationErrors.gender) {
+                              setValidationErrors({...validationErrors, gender: ""})
+                            }
+                          }}
+                        >
+                          <option value="">Seçiniz</option>
+                          <option value="Kız">Kız</option>
+                          <option value="Erkek">Erkek</option>
+                        </select>
+                        {validationErrors.gender && (
+                          <p className="text-red-500 text-sm mt-1">{validationErrors.gender}</p>
+                        )}
+                      </div>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
-                      <Label htmlFor="health" className="text-right">
-                        Sağlık Bilgisi
+                      <Label htmlFor="notes" className="text-right">
+                        Notlar
                       </Label>
-                      <Textarea id="health" className="col-span-3" />
+                      <Textarea 
+                        id="notes" 
+                        className="col-span-3"
+                        value={childForm.notes}
+                        onChange={(e) => setChildForm({...childForm, notes: e.target.value})}
+                        placeholder="Çocukla ilgili özel notlar"
+                      />
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button type="submit" onClick={() => setIsAddChildOpen(false)}>
+                    <Button type="submit" onClick={handleAddChild}>
                       Çocuk Ekle
                     </Button>
                   </DialogFooter>
@@ -285,17 +723,20 @@ function ChildrenPageContent() {
               <CardHeader className="bg-gradient-to-r from-indigo-50 to-blue-50">
                 <div className="flex items-center space-x-4">
                   <Avatar className="w-16 h-16">
-                    <AvatarFallback className="text-2xl bg-indigo-600 text-white">{child.avatar}</AvatarFallback>
+                    <AvatarFallback className="text-2xl bg-indigo-600 text-white">
+                      {child.firstName.charAt(0).toUpperCase()}
+                    </AvatarFallback>
                   </Avatar>
                   <div className="flex-1">
-                    <CardTitle className="text-2xl">{child.name}</CardTitle>
+                    <CardTitle className="text-2xl">{child.firstName} {child.lastName}</CardTitle>
                     <CardDescription className="text-lg">
-                      {child.age} yaşında • {child.school} • {child.grade}
+                      {calculateChildAge(child.dateOfBirth)} yaşında
+                      {child.gender && ` • ${child.gender}`}
                     </CardDescription>
                   </div>
                   <div className="text-right">
                     <p className="text-sm text-gray-600">Doğum Tarihi</p>
-                    <p className="font-medium">{new Date(child.birthDate).toLocaleDateString("tr-TR")}</p>
+                    <p className="font-medium">{new Date(child.dateOfBirth).toLocaleDateString("tr-TR")}</p>
                   </div>
                 </div>
               </CardHeader>
@@ -316,21 +757,21 @@ function ChildrenPageContent() {
                         <div className="space-y-2">
                           <div className="flex justify-between">
                             <span className="text-gray-600">Yaş:</span>
-                            <span>{child.age}</span>
+                            <span>{calculateChildAge(child.dateOfBirth)}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Okul:</span>
-                            <span>{child.school}</span>
+                            <span className="text-gray-600">Cinsiyet:</span>
+                            <span>{child.gender || 'Belirtilmemiş'}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Sınıf:</span>
-                            <span>{child.grade}</span>
+                            <span className="text-gray-600">Oluşturulma:</span>
+                            <span>{new Date(child.createdAt).toLocaleDateString('tr-TR')}</span>
                           </div>
                         </div>
                       </div>
                       <div>
                         <h3 className="font-semibold mb-3">Notlar</h3>
-                        <p className="text-gray-600">{child.notes}</p>
+                        <p className="text-gray-600">{child.notes || 'Henüz not eklenmemiş'}</p>
                       </div>
                     </div>
                   </TabsContent>
@@ -344,14 +785,14 @@ function ChildrenPageContent() {
                       </Button>
                     </div>
                     <div className="grid gap-3">
-                      {getChildFiles(child.id).map((file) => (
-                        <div key={file.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                      {(documents[child.id] || []).map((doc) => (
+                        <div key={doc.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                           <div className="flex items-center space-x-3">
-                            {getFileIcon(file.type)}
+                            <FileText className="w-4 h-4" />
                             <div>
-                              <p className="font-medium">{file.name}</p>
+                              <p className="font-medium">{doc.title}</p>
                               <p className="text-sm text-gray-600">
-                                {file.date} • {file.size}
+                                {new Date(doc.createdAt).toLocaleDateString('tr-TR')} • {doc.fileSize ? (doc.fileSize / 1024 / 1024).toFixed(2) + ' MB' : 'N/A'}
                               </p>
                             </div>
                           </div>
@@ -372,16 +813,18 @@ function ChildrenPageContent() {
                       </Button>
                     </div>
                     <div className="space-y-4">
-                      {getChildNotes(child.id).map((note) => (
-                        <div key={note.id} className="p-4 bg-gray-50 rounded-lg">
+                      {(milestones[child.id] || []).map((milestone) => (
+                        <div key={milestone.id} className="p-4 bg-gray-50 rounded-lg">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center space-x-2">
-                              <Badge className={getCategoryColor(note.category)}>{note.category}</Badge>
-                              <span className="text-sm text-gray-600">{note.author}</span>
+                              <Badge className={getCategoryColor(milestone.category)}>{milestone.category}</Badge>
+                              <span className="text-sm text-gray-600">Gelişim</span>
                             </div>
-                            <span className="text-sm text-gray-500">{note.date}</span>
+                            <span className="text-sm text-gray-500">{new Date(milestone.achievedAt).toLocaleDateString('tr-TR')}</span>
                           </div>
-                          <p className="text-gray-700">{note.note}</p>
+                          <h4 className="font-medium text-gray-900 mb-1">{milestone.title}</h4>
+                          {milestone.description && <p className="text-gray-700 text-sm mb-2">{milestone.description}</p>}
+                          {milestone.notes && <p className="text-gray-600 text-sm">{milestone.notes}</p>}
                         </div>
                       ))}
                     </div>
@@ -395,7 +838,7 @@ function ChildrenPageContent() {
                           Sağlık Bilgileri
                         </h3>
                         <div className="p-4 bg-red-50 rounded-lg">
-                          <p className="text-red-800">{child.healthInfo}</p>
+                          <p className="text-red-800">Sağlık bilgileri çok yakında eklenecek</p>
                         </div>
                       </div>
                       <div>
