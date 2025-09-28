@@ -86,6 +86,56 @@ export interface CreateExpenseData {
 
 export interface UpdateExpenseData extends Partial<CreateExpenseData> {}
 
+export interface Milestone {
+  id: string;
+  title: string;
+  description?: string;
+  achievedAt: string;
+  category: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+  childId: string;
+  child?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
+}
+
+export interface Document {
+  id: string;
+  title: string;
+  description?: string;
+  fileUrl: string;
+  fileType: string;
+  fileSize: number;
+  createdAt: string;
+  updatedAt: string;
+  childId: string;
+  child?: {
+    id: string;
+    firstName: string;
+    lastName: string;
+  };
+}
+
+export interface CreateMilestoneData {
+  title: string;
+  description?: string;
+  achievedAt: string;
+  category: string;
+  notes?: string;
+}
+
+export interface CreateDocumentData {
+  title: string;
+  description?: string;
+  fileUrl: string;
+  fileType: string;
+  fileSize: number;
+}
+
 class ApiClient {
   private getAuthToken(): string | null {
     if (typeof window === 'undefined') return null;
@@ -501,6 +551,94 @@ class ApiClient {
     return this.request(`/connections/sent/${connectionId}`, {
       method: 'DELETE',
     });
+  }
+
+  // Milestone methods
+  async getMilestones(childId: string): Promise<ApiResponse<Milestone[]>> {
+    return this.request(`/children/${childId}/milestones`);
+  }
+
+  async createMilestone(childId: string, milestoneData: CreateMilestoneData): Promise<ApiResponse<Milestone>> {
+    return this.request(`/children/${childId}/milestones`, {
+      method: 'POST',
+      body: JSON.stringify(milestoneData),
+    });
+  }
+
+  async updateMilestone(milestoneId: string, milestoneData: Partial<CreateMilestoneData>): Promise<ApiResponse<Milestone>> {
+    return this.request(`/children/milestones/${milestoneId}`, {
+      method: 'PATCH',
+      body: JSON.stringify(milestoneData),
+    });
+  }
+
+  async deleteMilestone(milestoneId: string): Promise<ApiResponse<void>> {
+    return this.request(`/children/milestones/${milestoneId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  // Document methods
+  async getDocuments(childId: string): Promise<ApiResponse<Document[]>> {
+    return this.request(`/children/${childId}/documents`);
+  }
+
+  async createDocument(childId: string, documentData: CreateDocumentData): Promise<ApiResponse<Document>> {
+    return this.request(`/children/${childId}/documents`, {
+      method: 'POST',
+      body: JSON.stringify(documentData),
+    });
+  }
+
+  async deleteDocument(documentId: string): Promise<ApiResponse<void>> {
+    return this.request(`/children/documents/${documentId}`, {
+      method: 'DELETE',
+    });
+  }
+
+  async uploadFile(childId: string, file: File, metadata: { title: string; description?: string }): Promise<ApiResponse<Document>> {
+    const token = this.getAuthToken();
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('title', metadata.title);
+    if (metadata.description) {
+      formData.append('description', metadata.description);
+    }
+
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const fullUrl = `${API_BASE_URL}/children/${childId}/upload`;
+
+    try {
+      const response = await fetch(fullUrl, {
+        method: 'POST',
+        headers,
+        body: formData,
+        mode: 'cors',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        let errorText: string;
+        try {
+          const errorData = await response.json();
+          errorText = errorData.message || errorData.error || `HTTP ${response.status}`;
+        } catch {
+          errorText = await response.text() || `HTTP ${response.status}`;
+        }
+        return { error: translateErrorMessage(errorText) };
+      }
+
+      const data = await response.json();
+      return { data };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      return { error: translateErrorMessage(errorMessage) };
+    }
   }
 
   // Account management

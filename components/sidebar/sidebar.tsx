@@ -23,6 +23,18 @@ export function Sidebar({ children, selectedChild, onChildChange, totalStats, is
   const pathname = usePathname()
   const { logout, user } = useAuth()
 
+  // Calculate child age helper
+  const calculateChildAge = (dateOfBirth: string) => {
+    const birth = new Date(dateOfBirth)
+    const today = new Date()
+    let age = today.getFullYear() - birth.getFullYear()
+    const monthDiff = today.getMonth() - birth.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--
+    }
+    return age
+  }
+
   const navigationItems = [
     {
       name: "Ana Sayfa",
@@ -175,11 +187,13 @@ export function Sidebar({ children, selectedChild, onChildChange, totalStats, is
                   }`}
                 >
                   <Avatar className="w-8 h-8">
-                    <AvatarFallback className="bg-indigo-600 text-white text-sm">{child.avatar}</AvatarFallback>
+                    <AvatarFallback className="bg-indigo-600 text-white text-sm">
+                      {child.firstName.charAt(0).toUpperCase()}
+                    </AvatarFallback>
                   </Avatar>
                   <div>
-                    <div className="font-medium text-sm">{child.name}</div>
-                    <div className="text-xs text-gray-500">{child.age} yaş</div>
+                    <div className="font-medium text-sm">{child.firstName} {child.lastName}</div>
+                    <div className="text-xs text-gray-500">{calculateChildAge(child.dateOfBirth)} yaş</div>
                   </div>
                 </button>
               ))}

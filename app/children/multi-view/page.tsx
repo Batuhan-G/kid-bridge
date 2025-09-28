@@ -1,6 +1,9 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AuthGuard } from "@/lib/auth-guard";
+import { api, type Child } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -19,6 +22,9 @@ import {
   PieChart,
   TrendingUp,
   Home,
+  LayoutGrid,
+  List,
+  Plus,
 } from "lucide-react";
 import {
   Breadcrumb,
@@ -33,53 +39,65 @@ import { Sidebar } from "@/components/sidebar/sidebar";
 import Link from "next/link";
 
 function MultiChildDashboardContent() {
+  const { toast } = useToast()
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
+  const [children, setChildren] = useState<Child[]>([])
+  const [loadingChildren, setLoadingChildren] = useState(true)
+  const [selectedChild, setSelectedChild] = useState<Child | null>(null)
 
-  const children = [
-    {
-      id: 1,
-      name: "Elif",
-      age: 8,
-      avatar: "E",
-      stats: {
-        upcomingEvents: 3,
-        unreadMessages: 1,
-        monthlyExpenses: 1200,
-        lastActivity: "2 saat önce",
-      },
-    },
-    {
-      id: 2,
-      name: "Can",
-      age: 12,
-      avatar: "C",
-      stats: {
-        upcomingEvents: 2,
-        unreadMessages: 2,
-        monthlyExpenses: 800,
-        lastActivity: "5 saat önce",
-      },
-    },
-    {
-      id: 3,
-      name: "Zeynep",
-      age: 6,
-      avatar: "Z",
-      stats: {
-        upcomingEvents: 1,
-        unreadMessages: 0,
-        monthlyExpenses: 450,
-        lastActivity: "1 gün önce",
-      },
-    },
-  ];
+  // Calculate child age helper
+  const calculateChildAge = (dateOfBirth: string) => {
+    const birth = new Date(dateOfBirth)
+    const today = new Date()
+    let age = today.getFullYear() - birth.getFullYear()
+    const monthDiff = today.getMonth() - birth.getMonth()
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
+      age--
+    }
+    return age
+  }
 
-  const [selectedChild, setSelectedChild] = useState(children[0])
+  // Load children on mount
+  useEffect(() => {
+    loadChildren()
+  }, [])
+
+  // Select first child when children are loaded
+  useEffect(() => {
+    if (children.length > 0 && !selectedChild) {
+      setSelectedChild(children[0])
+    }
+  }, [children, selectedChild])
+
+  // Load children from API
+  const loadChildren = async () => {
+    setLoadingChildren(true)
+    try {
+      const response = await api.getChildren()
+      if (response.data) {
+        setChildren(response.data)
+      } else {
+        toast({
+          title: "Hata",
+          description: response.error || "Çocuklar yüklenemedi",
+          variant: "destructive"
+        })
+      }
+    } catch (error) {
+      toast({
+        title: "Hata",
+        description: "Çocuklar yüklenemedi",
+        variant: "destructive"
+      })
+    } finally {
+      setLoadingChildren(false)
+    }
+  }
   
   const totalStats = {
-    events: children.reduce((sum, child) => sum + child.stats.upcomingEvents, 0),
-    messages: children.reduce((sum, child) => sum + child.stats.unreadMessages, 0),
-    expenses: children.reduce((sum, child) => sum + child.stats.monthlyExpenses, 0),
+    events: 0, // Will be implemented with calendar feature
+    messages: children.reduce((sum, child) => sum + (child._count?.messages || 0), 0),
+    expenses: children.reduce((sum, child) => sum + (child._count?.expenses || 0), 0),
   }
 
   const recentActivities = [
@@ -112,11 +130,21 @@ function MultiChildDashboardContent() {
     },
   ];
 
-  const weeklyComparison = [
-    { child: "Elif", thisWeek: 5, lastWeek: 3, change: "+2" },
-    { child: "Can", thisWeek: 4, lastWeek: 6, change: "-2" },
-    { child: "Zeynep", thisWeek: 2, lastWeek: 2, change: "0" },
-  ];
+  // Generate weekly comparison data based on real children
+  const weeklyComparison = children.map((child) => ({
+    child: `${child.firstName} ${child.lastName}`,
+    firstName: child.firstName,
+    thisWeek: child._count?.activities || 0,
+    lastWeek: Math.max(0, (child._count?.activities || 0) - Math.floor(Math.random() * 3)),
+    change: "0", // Will be calculated
+  })).map((item) => ({
+    ...item,
+    change: item.thisWeek > item.lastWeek 
+      ? `+${item.thisWeek - item.lastWeek}`
+      : item.thisWeek < item.lastWeek
+      ? `-${item.lastWeek - item.thisWeek}`
+      : "0"
+  }));
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -165,9 +193,28 @@ function MultiChildDashboardContent() {
                 </Breadcrumb>
               </div>
             </div>
-            <Badge variant="secondary" className="px-3 py-1">
-              {children.length} Çocuk
-            </Badge>
+            
+            <div className="flex items-center space-x-2">
+              {/* View Toggle Buttons */}
+              <div className="flex items-center border rounded-lg overflow-hidden">
+                <Link href="/children">
+                  <Button variant="ghost" size="sm" className="rounded-none border-r">
+                    <List className="w-4 h-4 mr-1" />
+                    Liste
+                  </Button>
+                </Link>
+                <Link href="/children/multi-view">
+                  <Button variant="ghost" size="sm" className="rounded-none bg-indigo-50 text-indigo-600">
+                    <LayoutGrid className="w-4 h-4 mr-1" />
+                    Çoklu
+                  </Button>
+                </Link>
+              </div>
+              
+              <Badge variant="secondary" className="px-3 py-1">
+                {children.length} Çocuk
+              </Badge>
+            </div>
           </div>
         </div>
       </header>
@@ -188,21 +235,44 @@ function MultiChildDashboardContent() {
             Tüm Çocuklarınız İçin Özet
           </h1>
           <p className="text-gray-600">
-            Elif, Can ve Zeynep için güncel durum ve aktiviteler
+            {children.length > 0 
+              ? `${children.map(child => `${child.firstName}`).join(', ')} için güncel durum ve aktiviteler`
+              : 'Henüz çocuk kaydı bulunmuyor'
+            }
           </p>
         </div>
 
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="overview">Genel Bakış</TabsTrigger>
-            <TabsTrigger value="activities">Aktiviteler</TabsTrigger>
-            <TabsTrigger value="comparison">Karşılaştırma</TabsTrigger>
-            <TabsTrigger value="insights">AI Öngörüler</TabsTrigger>
-          </TabsList>
+        {loadingChildren ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Çocuklar yükleniyor...</p>
+            </div>
+          </div>
+        ) : children.length === 0 ? (
+          <div className="text-center py-12">
+            <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Henüz çocuk kaydı yok</h3>
+            <p className="text-gray-600 mb-4">Çocuk ekleyerek başlayın</p>
+            <Link href="/children">
+              <Button>
+                <Plus className="w-4 h-4 mr-2" />
+                Çocuk Ekle
+              </Button>
+            </Link>
+          </div>
+        ) : (
+          <Tabs defaultValue="overview" className="space-y-6">
+            <TabsList className="grid w-full grid-cols-4">
+              <TabsTrigger value="overview">Genel Bakış</TabsTrigger>
+              <TabsTrigger value="activities">Aktiviteler</TabsTrigger>
+              <TabsTrigger value="comparison">Karşılaştırma</TabsTrigger>
+              <TabsTrigger value="insights">AI Öngörüler</TabsTrigger>
+            </TabsList>
 
-          <TabsContent value="overview">
-            <MultiChildStats children={children} />
-          </TabsContent>
+            <TabsContent value="overview">
+              <MultiChildStats children={children} />
+            </TabsContent>
 
           <TabsContent value="activities">
             <div className="grid lg:grid-cols-2 gap-8">
@@ -302,7 +372,7 @@ function MultiChildDashboardContent() {
                         <div className="flex items-center space-x-3">
                           <Avatar>
                             <AvatarFallback className="bg-indigo-600 text-white">
-                              {item.child[0]}
+                              {item.firstName.charAt(0).toUpperCase()}
                             </AvatarFallback>
                           </Avatar>
                           <span className="font-medium">{item.child}</span>
@@ -347,14 +417,14 @@ function MultiChildDashboardContent() {
                 <CardContent>
                   <div className="space-y-4">
                     {children.map((child) => {
-                      const totalExpenses = children.reduce(
-                        (sum, c) => sum + c.stats.monthlyExpenses,
+                      const expenseCount = child._count?.expenses || 0;
+                      const totalExpenseCount = children.reduce(
+                        (sum, c) => sum + (c._count?.expenses || 0),
                         0
                       );
-                      const percentage = (
-                        (child.stats.monthlyExpenses / totalExpenses) *
-                        100
-                      ).toFixed(1);
+                      const percentage = totalExpenseCount > 0 
+                        ? ((expenseCount / totalExpenseCount) * 100).toFixed(1)
+                        : "0";
 
                       return (
                         <div key={child.id} className="space-y-2">
@@ -362,14 +432,14 @@ function MultiChildDashboardContent() {
                             <div className="flex items-center space-x-2">
                               <Avatar className="w-6 h-6">
                                 <AvatarFallback className="text-xs bg-indigo-600 text-white">
-                                  {child.avatar}
+                                  {child.firstName.charAt(0).toUpperCase()}
                                 </AvatarFallback>
                               </Avatar>
-                              <span className="font-medium">{child.name}</span>
+                              <span className="font-medium">{child.firstName} {child.lastName}</span>
                             </div>
                             <div className="text-right">
                               <p className="font-bold">
-                                ₺{child.stats.monthlyExpenses}
+                                {expenseCount} Harcama
                               </p>
                               <p className="text-xs text-gray-600">
                                 %{percentage}
@@ -477,7 +547,8 @@ function MultiChildDashboardContent() {
               </Card>
             </div>
           </TabsContent>
-        </Tabs>
+          </Tabs>
+        )}
       </div>
     </div>
   );

@@ -73,3 +73,7 @@ coverage/
 # ----------------------
 # Optional: script output
 scripts/output/
+
+# ----------------------
+# Documentation (sensitive/internal)
+prd.md
