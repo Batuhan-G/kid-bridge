@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Calendar, MessageCircle, Users, PieChart, Brain, Shield } from "lucide-react"
+import { Footer } from "@/components/footer/footer"
 import Link from "next/link"
 
 function LandingContent() {
@@ -36,21 +37,14 @@ function LandingContent() {
           Çocuklarınız İçin <span className="text-indigo-600">Ortak Gelecek</span>
         </h1>
         <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-          Boşanmış ebeveynler için geliştirilmiş platform ile çocuklarınızla ilgili sorumlulukları, etkinlikleri ve
+          Ebeveynler için geliştirilmiş platform ile çocuklarınızla ilgili sorumlulukları, etkinlikleri ve
           iletişimi sağlıklı bir şekilde yönetin.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <Link href="/register">
             <Button size="lg" className="px-8 py-3">
               Ücretsiz Başlayın
             </Button>
           </Link>
-          <Link href="/demo">
-            <Button variant="outline" size="lg" className="px-8 py-3 bg-transparent">
-              Demo İzle
-            </Button>
-          </Link>
-        </div>
       </section>
 
       {/* Features */}
@@ -122,71 +116,7 @@ function LandingContent() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white py-12">
-        <div className="container mx-auto px-4">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="flex items-center justify-center">
-                  <img
-                    src="/kid-bridge-logo1.png"
-                    alt="KidBridge Logo"
-                    className="w-12 h-12"
-                  />
-                </div>
-                <span className="text-xl font-bold">KidBridge</span>
-              </div>
-              <p className="text-gray-400">Çocuklar için daha iyi bir gelecek inşa ediyoruz.</p>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Ürün</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li>
-                  <Link href="/features">Özellikler</Link>
-                </li>
-                <li>
-                  <Link href="/pricing">Fiyatlandırma</Link>
-                </li>
-                <li>
-                  <Link href="/demo">Demo</Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Destek</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li>
-                  <Link href="/help">Yardım Merkezi</Link>
-                </li>
-                <li>
-                  <Link href="/contact">İletişim</Link>
-                </li>
-                <li>
-                  <Link href="/privacy">Gizlilik</Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="font-semibold mb-4">Şirket</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li>
-                  <Link href="/about">Hakkımızda</Link>
-                </li>
-                <li>
-                  <Link href="/blog">Blog</Link>
-                </li>
-                <li>
-                  <Link href="/careers">Kariyer</Link>
-                </li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 KidBridge. Tüm hakları saklıdır.</p>
-          </div>
-        </div>
-      </footer>
+      <Footer />
     </div>
   )
 }
