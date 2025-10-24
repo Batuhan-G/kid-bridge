@@ -128,18 +128,40 @@ export class ChildrenController {
         },
       }),
       fileFilter: (req, file, cb) => {
-        const allowedTypes = /jpeg|jpg|png|gif|pdf|doc|docx|txt/;
-        const extName = allowedTypes.test(extname(file.originalname).toLowerCase());
-        const mimeType = allowedTypes.test(file.mimetype);
+        // Allowed MIME types for security
+        const allowedMimeTypes = [
+          'image/jpeg',
+          'image/jpg',
+          'image/png',
+          'image/gif',
+          'application/pdf',
+          'application/msword',
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          'text/plain'
+        ];
+
+        // Allowed extensions
+        const allowedExtensions = /\.(jpeg|jpg|png|gif|pdf|doc|docx|txt)$/i;
         
-        if (extName && mimeType) {
+        // Check file extension
+        const extName = allowedExtensions.test(file.originalname.toLowerCase());
+        
+        // Check MIME type
+        const mimeType = allowedMimeTypes.includes(file.mimetype.toLowerCase());
+        
+        // Additional security: check for null bytes and path traversal
+        const hasNullBytes = file.originalname.includes('\0');
+        const hasPathTraversal = file.originalname.includes('../') || file.originalname.includes('..\\');
+        
+        if (extName && mimeType && !hasNullBytes && !hasPathTraversal) {
           return cb(null, true);
         } else {
-          cb(new Error('Only images and documents are allowed'), false);
+          cb(new Error('Geçersiz dosya tipi veya güvensiz dosya adı'), false);
         }
       },
       limits: {
-        fileSize: 10 * 1024 * 1024, // 10MB limit
+        fileSize: parseInt(process.env.MAX_FILE_SIZE || '10485760') || 10 * 1024 * 1024, // Environment'dan alınan limit
+        files: 1, // Tek dosya
       },
     }),
   )

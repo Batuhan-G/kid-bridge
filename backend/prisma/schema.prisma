@@ -55,11 +55,11 @@ enum ActivityStatus {
 
 model User {
   id        String   @id @default(cuid())
-  email     String   @unique
-  password  String
-  firstName String
-  lastName  String
-  phone     String?
+  email     String   @unique // PII - Should be encrypted in production
+  password  String   // Hashed with bcrypt salt rounds 12
+  firstName String   // PII - Consider masking in logs
+  lastName  String   // PII - Consider masking in logs
+  phone     String?  // PII - Consider masking in logs
   role      UserRole @default(PARENT)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())

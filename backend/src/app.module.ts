@@ -9,6 +9,7 @@ import { MessagesModule } from './messages/messages.module';
 import { ExpensesModule } from './expenses/expenses.module';
 import { ConnectionsModule } from './connections/connections.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { LoggerModule } from './common/logger/logger.module';
 
 @Module({
   imports: [
@@ -16,6 +17,7 @@ import { NotificationsModule } from './notifications/notifications.module';
       isGlobal: true,
       envFilePath: '.env',
     }),
+    LoggerModule,
     PrismaModule,
     AuthModule,
     ChildrenModule,

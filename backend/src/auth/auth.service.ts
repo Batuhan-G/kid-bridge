@@ -1,7 +1,8 @@
-import { Injectable, ConflictException, BadRequestException } from '@nestjs/common';
+import { Injectable, ConflictException, BadRequestException, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import * as bcrypt from 'bcryptjs';
 
 @Injectable()
@@ -23,8 +24,8 @@ export class AuthService {
       throw new ConflictException('User with this email already exists');
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Hash password with increased salt rounds for better security
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     // Create user
     const user = await this.prisma.user.create({
@@ -49,9 +50,24 @@ export class AuthService {
   }
 
   async login(user: any) {
-    const payload = { email: user.email, sub: user.id };
+    const payload = { 
+      email: user.email, 
+      sub: user.id,
+      iat: Math.floor(Date.now() / 1000), // Issued at
+      jti: Math.random().toString(36).substr(2, 9), // JWT ID for tracking
+    };
+    
+    const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' }); // Short-lived access token
+    const refreshToken = this.jwtService.sign(
+      { sub: user.id, type: 'refresh' }, 
+      { expiresIn: '7d' }
+    ); // Long-lived refresh token
+    
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: accessToken,
+      refresh_token: refreshToken,
+      expires_in: 900, // 15 minutes in seconds
+      token_type: 'Bearer',
       user: {
         id: user.id,
         email: user.email,
@@ -289,6 +305,90 @@ export class AuthService {
     } catch (error) {
       console.error('Failed to remove cross-parent relationships:', error);
       // Don't throw error, continue with deletion
+    }
+  }
+
+  async changePassword(userId: string, changePasswordDto: ChangePasswordDto) {
+    const { currentPassword, newPassword } = changePasswordDto;
+
+    // Get current user
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new BadRequestException('Kullanıcı bulunamadı');
+    }
+
+    // Verify current password
+    const isCurrentPasswordValid = await bcrypt.compare(currentPassword, user.password);
+    if (!isCurrentPasswordValid) {
+      throw new UnauthorizedException('Mevcut parola yanlış');
+    }
+
+    // Check if new password is different from current
+    const isSamePassword = await bcrypt.compare(newPassword, user.password);
+    if (isSamePassword) {
+      throw new BadRequestException('Yeni parola mevcut parola ile aynı olamaz');
+    }
+
+    // Hash new password
+    const hashedNewPassword = await bcrypt.hash(newPassword, 12); // Increased salt rounds for better security
+
+    // Update password
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { password: hashedNewPassword },
+    });
+
+    return {
+      message: 'Parola başarıyla güncellendi',
+    };
+  }
+
+  async refreshToken(refreshToken: string) {
+    try {
+      // Verify refresh token
+      const decoded = this.jwtService.verify(refreshToken);
+      
+      if (decoded.type !== 'refresh') {
+        throw new UnauthorizedException('Geçersiz refresh token');
+      }
+
+      // Get user
+      const user = await this.prisma.user.findUnique({
+        where: { id: decoded.sub },
+        select: {
+          id: true,
+          email: true,
+          firstName: true,
+          lastName: true,
+          role: true,
+          isActive: true,
+        },
+      });
+
+      if (!user || !user.isActive) {
+        throw new UnauthorizedException('Kullanıcı bulunamadı veya aktif değil');
+      }
+
+      // Generate new access token
+      const payload = { 
+        email: user.email, 
+        sub: user.id,
+        iat: Math.floor(Date.now() / 1000),
+        jti: Math.random().toString(36).substr(2, 9),
+      };
+      
+      const accessToken = this.jwtService.sign(payload, { expiresIn: '15m' });
+
+      return {
+        access_token: accessToken,
+        expires_in: 900,
+        token_type: 'Bearer',
+      };
+    } catch (error) {
+      throw new UnauthorizedException('Geçersiz refresh token');
     }
   }
 }

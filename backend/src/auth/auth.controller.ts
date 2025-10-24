@@ -6,9 +6,12 @@ import {
   Request,
   Get,
   Delete,
+  Patch,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
@@ -43,5 +46,16 @@ export class AuthController {
   @Delete('account')
   async deleteAccount(@Request() req, @Body() body: { emailConfirmation: string }) {
     return this.authService.deleteAccount(req.user.email, body.emailConfirmation);
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Patch('change-password')
+  async changePassword(@Request() req, @Body() changePasswordDto: ChangePasswordDto) {
+    return this.authService.changePassword(req.user.id, changePasswordDto);
+  }
+
+  @Post('refresh')
+  async refreshToken(@Body() refreshTokenDto: RefreshTokenDto) {
+    return this.authService.refreshToken(refreshTokenDto.refreshToken);
   }
 }
