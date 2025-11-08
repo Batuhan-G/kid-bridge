@@ -16,7 +16,7 @@ Kid Bridge is a comprehensive digital platform designed to facilitate communicat
 - **📁 Document Management** - Secure file storage and sharing
 - **🔔 Smart Notifications** - Actionable alerts with approval workflows
 
-## 🚀 Quick Start
+## 🚀 Stack
 
 ### Prerequisites
 - Node.js 20+
