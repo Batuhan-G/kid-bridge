@@ -1,7 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AuthGuard } from "@/lib/auth-guard";
+import { api, Child } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -51,9 +53,11 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import { ChildSelector } from "@/components/child-selector/child-selector";
 import { Sidebar } from "@/components/sidebar/sidebar";
 import { SidebarTrigger } from "@/components/sidebar-trigger/sidebar-trigger";
+import { ChildSelector } from "@/components/child-selector/child-selector";
+import { mapApiChildToSelector } from "@/components/child-selector/child-selector.types";
+import type { Child as SelectorChild } from "@/components/child-selector/child-selector.types";
 import Link from "next/link";
 
 interface Event {
@@ -69,57 +73,60 @@ interface Event {
 }
 
 function CalendarPageContent() {
+  const { user, isLoading: authLoading } = useAuth();
   const [isAddEventOpen, setIsAddEventOpen] = useState(false);
-  const [selectedChild, setSelectedChild] = useState<any>(null);
+  const [children, setChildren] = useState<Child[]>([]);
+  const [isLoadingChildren, setIsLoadingChildren] = useState(true);
+  const [selectedChild, setSelectedChild] = useState<Child | null>(null);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isEventDetailOpen, setIsEventDetailOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
-  const children = [
-    { 
-      id: 1, 
-      name: "Elif", 
-      age: 8, 
-      avatar: "E", 
-      school: "Atatürk İlkokulu",
-      stats: {
-        upcomingEvents: 3,
-        unreadMessages: 1,
-        monthlyExpenses: 1200,
-      },
-    },
-    { 
-      id: 2, 
-      name: "Can", 
-      age: 12, 
-      avatar: "C", 
-      school: "Gazi Ortaokulu",
-      stats: {
-        upcomingEvents: 2,
-        unreadMessages: 2,
-        monthlyExpenses: 800,
-      },
-    },
-    { 
-      id: 3, 
-      name: "Zeynep", 
-      age: 6, 
-      avatar: "Z", 
-      school: "Anaokulu",
-      stats: {
-        upcomingEvents: 1,
-        unreadMessages: 0,
-        monthlyExpenses: 450,
-      },
-    },
-  ];
+  // Map API children to selector format
+  const mappedChildren: SelectorChild[] = children.map(mapApiChildToSelector);
+  const mappedSelectedChild: SelectorChild | null = selectedChild ? mapApiChildToSelector(selectedChild) : null;
+
+  // Handle child selector change
+  const handleChildSelectorChange = (selectorChild: SelectorChild) => {
+    const apiChild = children.find(c => c.id === selectorChild.id);
+    if (apiChild) {
+      setSelectedChild(apiChild);
+    }
+  };
+
+  // Fetch children data - only when user is authenticated
+  useEffect(() => {
+    if (!user || authLoading) return;
+    
+    const fetchChildren = async () => {
+      try {
+        setIsLoadingChildren(true);
+        const result = await api.getChildren();
+        if (!result.error && result.data) {
+          setChildren(result.data);
+          // Set first child as selected if none selected
+          if (!selectedChild && result.data.length > 0) {
+            setSelectedChild(result.data[0]);
+          }
+        } else {
+          console.error('Failed to fetch children:', result.error);
+        }
+      } catch (error) {
+        console.error('Failed to fetch children:', error);
+      } finally {
+        setIsLoadingChildren(false);
+      }
+    };
+
+    fetchChildren();
+  }, [user, authLoading]);
 
   const totalStats = {
-    events: children.reduce((sum, child) => sum + child.stats.upcomingEvents, 0),
-    messages: children.reduce((sum, child) => sum + child.stats.unreadMessages, 0),
-    expenses: children.reduce((sum, child) => sum + child.stats.monthlyExpenses, 0),
+    events: children.reduce((sum, child) => sum + (child._count?.activities || 0), 0),
+    messages: children.reduce((sum, child) => sum + (child._count?.messages || 0), 0),
+    expenses: children.reduce((sum, child) => sum + (child._count?.expenses || 0), 0),
   }
 
   const [events, setEvents] = useState<Event[]>([
@@ -232,8 +239,8 @@ function CalendarPageContent() {
     setTimeout(() => setSuccessMessage(""), 3000);
   };
 
-  const filteredEvents = selectedChild
-    ? events.filter((event) => event.child === selectedChild.name)
+  const filteredEvents = mappedSelectedChild
+    ? events.filter((event) => event.child === mappedSelectedChild.name)
     : events;
 
   const upcomingEvents = filteredEvents
@@ -251,7 +258,7 @@ function CalendarPageContent() {
       {/* Sidebar */}
       <Sidebar
         children={children}
-        selectedChild={selectedChild || children[0]}
+        selectedChild={selectedChild || (children.length > 0 ? children[0] : null)}
         onChildChange={setSelectedChild}
         totalStats={totalStats}
         isOpen={isSidebarOpen}
@@ -305,11 +312,14 @@ function CalendarPageContent() {
             </div>
 
             <div className="hidden lg:flex items-center space-x-3">
-              <ChildSelector
-                children={children}
-                selectedChild={selectedChild || children[0]}
-                onChildChange={setSelectedChild}
-              />
+              {!isLoadingChildren && mappedSelectedChild && mappedChildren.length > 0 && (
+                <ChildSelector
+                  children={mappedChildren}
+                  selectedChild={mappedSelectedChild}
+                  onChildChange={handleChildSelectorChange}
+                />
+              )}
+            </div>
 
               <Dialog open={isAddEventOpen} onOpenChange={setIsAddEventOpen}>
                 <DialogTrigger asChild>
@@ -348,12 +358,12 @@ function CalendarPageContent() {
                         <Label htmlFor="child" className="text-right">
                           Çocuk
                         </Label>
-                        <Select name="child" required>
+                        <Select>
                           <SelectTrigger className="col-span-3">
                             <SelectValue placeholder="Çocuk seçin" />
                           </SelectTrigger>
                           <SelectContent>
-                            {children.map((child) => (
+                            {mappedChildren.map((child) => (
                               <SelectItem key={child.id} value={child.name}>
                                 {child.name}
                               </SelectItem>
@@ -365,7 +375,7 @@ function CalendarPageContent() {
                         <Label htmlFor="type" className="text-right">
                           Tür
                         </Label>
-                        <Select name="type" required>
+                        <Select>
                           <SelectTrigger className="col-span-3">
                             <SelectValue placeholder="Etkinlik türü seçin" />
                           </SelectTrigger>
@@ -474,11 +484,13 @@ function CalendarPageContent() {
 
         {/* Mobile Child Selector */}
         <div className="lg:hidden mb-4">
-          <ChildSelector
-            children={children}
-            selectedChild={selectedChild || children[0]}
-            onChildChange={setSelectedChild}
-          />
+          {!isLoadingChildren && mappedSelectedChild && mappedChildren.length > 0 && (
+            <ChildSelector
+              children={mappedChildren}
+              selectedChild={mappedSelectedChild}
+              onChildChange={handleChildSelectorChange}
+            />
+          )}
         </div>
 
         {/* Today's Events */}
@@ -548,9 +560,9 @@ function CalendarPageContent() {
                 <Calendar className="w-5 h-5" />
                 <span>
                   Yaklaşan Etkinlikler
-                  {selectedChild && (
+                  {mappedSelectedChild && (
                     <span className="text-sm font-normal text-gray-600 ml-2">
-                      - {selectedChild.name}
+                      - {mappedSelectedChild.name}
                     </span>
                   )}
                 </span>

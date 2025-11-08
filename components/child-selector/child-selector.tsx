@@ -18,10 +18,10 @@ export function ChildSelector({ children, selectedChild, onChildChange, showAll 
 
   return (
     <Select
-      value={selectedChild.id.toString()}
+      value={selectedChild.id}
       onValueChange={(value) => {
         if (value === "all") return
-        const child = children.find((c) => c.id === Number.parseInt(value))
+        const child = children.find((c) => c.id === value)
         if (child) onChildChange(child)
       }}
     >
@@ -50,7 +50,7 @@ export function ChildSelector({ children, selectedChild, onChildChange, showAll 
           </SelectItem>
         )}
         {children.map((child) => (
-          <SelectItem key={child.id} value={child.id.toString()}>
+          <SelectItem key={child.id} value={child.id}>
             <div className="flex items-center space-x-2">
               <Avatar className="w-6 h-6">
                 <AvatarFallback className="text-xs bg-indigo-600 text-white">{child.avatar}</AvatarFallback>

@@ -1,7 +1,12 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { AuthGuard } from "@/lib/auth-guard"
+import { api, Child } from "@/lib/api"
+import { useAuth } from "@/lib/auth-context"
+import { ChildSelector } from "@/components/child-selector/child-selector"
+import { mapApiChildToSelector } from "@/components/child-selector/child-selector.types"
+import type { Child as SelectorChild } from "@/components/child-selector/child-selector.types"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -15,7 +20,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import { MessageCircle, Send, Lightbulb, AlertTriangle, Check, Home } from "lucide-react"
+import { MessageCircle, Send, Lightbulb, AlertTriangle, Check, Home, ArrowLeft } from "lucide-react"
 import Link from "next/link"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { SidebarTrigger } from "@/components/sidebar-trigger/sidebar-trigger"
@@ -36,58 +41,68 @@ interface Conversation {
   time: string
   unread: number
   child: string
-  childId: number
+  childId: string
 }
 
 function MessagesPageContent() {
+  const { user, isLoading: authLoading } = useAuth()
   const [selectedChat, setSelectedChat] = useState("mehmet-elif")
   const [newMessage, setNewMessage] = useState("")
   const [showAISuggestion, setShowAISuggestion] = useState(false)
   const [isMobileConversationOpen, setIsMobileConversationOpen] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
-  const children = [
-    { 
-      id: 1, 
-      name: "Elif", 
-      age: 8, 
-      avatar: "E",
-      stats: {
-        upcomingEvents: 3,
-        unreadMessages: 1,
-        monthlyExpenses: 1200,
-      },
-    },
-    { 
-      id: 2, 
-      name: "Can", 
-      age: 12, 
-      avatar: "C",
-      stats: {
-        upcomingEvents: 2,
-        unreadMessages: 2,
-        monthlyExpenses: 800,
-      },
-    },
-    { 
-      id: 3, 
-      name: "Zeynep", 
-      age: 6, 
-      avatar: "Z",
-      stats: {
-        upcomingEvents: 1,
-        unreadMessages: 0,
-        monthlyExpenses: 450,
-      },
-    },
-  ]
+  const [children, setChildren] = useState<Child[]>([])
+  const [isLoadingChildren, setIsLoadingChildren] = useState(true)
+  const [selectedChild, setSelectedChild] = useState<Child | null>(null)
 
-  const [selectedChild, setSelectedChild] = useState(children[0])
+  // Map API children to selector format
+  const mappedChildren: SelectorChild[] = children.map(mapApiChildToSelector)
+  const mappedSelectedChild: SelectorChild | null = selectedChild ? mapApiChildToSelector(selectedChild) : null
+
+  // Handle child selector change
+  const handleChildSelectorChange = (selectorChild: SelectorChild) => {
+    if (selectorChild.id === "all") {
+      setSelectedChild(children.length > 0 ? children[0] : null) // Default to first child for "all"
+    } else {
+      const apiChild = children.find(c => c.id === selectorChild.id)
+      if (apiChild) {
+        setSelectedChild(apiChild)
+      }
+    }
+  }
+
+  // Fetch children data - only when user is authenticated
+  useEffect(() => {
+    if (!user || authLoading) return
+    
+    const fetchChildren = async () => {
+      try {
+        setIsLoadingChildren(true)
+        const result = await api.getChildren()
+        if (!result.error && result.data) {
+          setChildren(result.data)
+          // Set first child as selected if none selected
+          if (!selectedChild && result.data.length > 0) {
+            setSelectedChild(result.data[0])
+          }
+        } else {
+          console.error('Failed to fetch children:', result.error)
+        }
+      } catch (error) {
+        console.error('Failed to fetch children:', error)
+      } finally {
+        setIsLoadingChildren(false)
+      }
+    }
+
+    fetchChildren()
+  }, [user, authLoading])
   
   const totalStats = {
-    events: children.reduce((sum, child) => sum + child.stats.upcomingEvents, 0),
-    messages: children.reduce((sum, child) => sum + child.stats.unreadMessages, 0),
-    expenses: children.reduce((sum, child) => sum + child.stats.monthlyExpenses, 0),
+    events: children.reduce((sum, child) => sum + (child._count?.activities || 0), 0),
+    messages: children.reduce((sum, child) => sum + (child._count?.messages || 0), 0),
+    expenses: children.reduce((sum, child) => sum + (child._count?.expenses || 0), 0),
   }
 
   const [conversations, setConversations] = useState<Conversation[]>([
@@ -98,7 +113,7 @@ function MessagesPageContent() {
       time: "5 saat önce",
       unread: 0,
       child: "Elif",
-      childId: 1,
+      childId: "1",
     },
     {
       id: "mehmet-can",
@@ -107,7 +122,7 @@ function MessagesPageContent() {
       time: "2 saat önce",
       unread: 2,
       child: "Can",
-      childId: 2,
+      childId: "2",
     },
     {
       id: "mehmet-zeynep",
@@ -116,7 +131,7 @@ function MessagesPageContent() {
       time: "1 gün önce",
       unread: 0,
       child: "Zeynep",
-      childId: 3,
+      childId: "3",
     },
   ])
 
@@ -213,7 +228,9 @@ function MessagesPageContent() {
     setConversations(conversations.map((conv) => (conv.id === convId ? { ...conv, unread: 0 } : conv)))
   }
 
-  const filteredConversations = conversations.filter((conv) => conv.childId === selectedChild.id)
+  const filteredConversations = selectedChild 
+    ? conversations.filter((conv) => conv.childId === selectedChild.id)
+    : conversations
 
   const currentConversation = conversations.find((conv) => conv.id === selectedChat)
 
@@ -277,41 +294,21 @@ function MessagesPageContent() {
                 </Button>
               )}
             </div>
-            <Select
-              value={selectedChild.id.toString()}
-              onValueChange={(value) => {
-                if (value === "all") {
-                  setSelectedChild(children[0]) // Default to first child for now
-                } else {
-                  const child = children.find(c => c.id === Number.parseInt(value))
-                  if (child) setSelectedChild(child)
-                }
-              }}
-            >
-              <SelectTrigger className="w-full sm:w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tüm Çocuklar</SelectItem>
-                {children.map((child) => (
-                  <SelectItem key={child.id} value={child.id.toString()}>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center text-white text-xs">
-                        {child.avatar}
-                      </div>
-                      <span>{child.name}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+{!isLoadingChildren && mappedSelectedChild && mappedChildren.length > 0 && (
+              <ChildSelector
+                children={mappedChildren}
+                selectedChild={mappedSelectedChild}
+                onChildChange={handleChildSelectorChange}
+                showAll={true}
+              />
+            )}
           </div>
         </div>
       </header>
 
       <Sidebar
         children={children}
-        selectedChild={selectedChild}
+        selectedChild={selectedChild || (children.length > 0 ? children[0] : null)}
         onChildChange={setSelectedChild}
         totalStats={totalStats}
         isOpen={isSidebarOpen}

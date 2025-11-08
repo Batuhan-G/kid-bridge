@@ -147,21 +147,36 @@ export const translateErrorMessage = (errorMessage: string): string => {
     return 'Beklenmeyen bir hata oluştu';
   }
 
+  // Ensure errorMessage is a string
+  let messageStr = String(errorMessage);
+  
+  // If it's still "[object Object]", try to extract meaningful info
+  if (messageStr === '[object Object]') {
+    console.log('Warning: translateErrorMessage received an object:', errorMessage);
+    try {
+      // Try to extract message from object
+      const obj = errorMessage as any;
+      messageStr = obj.message || obj.error || obj.toString() || 'Beklenmeyen bir hata oluştu';
+    } catch {
+      messageStr = 'Beklenmeyen bir hata oluştu';
+    }
+  }
+
   // Direct message lookup (exact match)
-  const directTranslation = ERROR_MESSAGES[errorMessage];
+  const directTranslation = ERROR_MESSAGES[messageStr];
   if (directTranslation) {
     return directTranslation;
   }
 
   // Pattern matching for partial matches
   for (const { pattern, message } of ERROR_PATTERNS) {
-    if (pattern.test(errorMessage)) {
+    if (pattern.test(messageStr)) {
       return message;
     }
   }
 
   // If message contains common keywords, try to extract meaning
-  const lowerMessage = errorMessage.toLowerCase();
+  const lowerMessage = messageStr.toLowerCase();
   
   if (lowerMessage.includes('email') && lowerMessage.includes('password')) {
     return 'E-posta veya şifre hatalı';
@@ -180,5 +195,5 @@ export const translateErrorMessage = (errorMessage: string): string => {
   }
 
   // Return original message if no translation found
-  return errorMessage;
+  return messageStr;
 };

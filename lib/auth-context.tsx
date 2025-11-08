@@ -69,7 +69,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { success: true };
       } else {
         // API'den gelen error zaten translateErrorMessage ile çevrilmiş olacak
-        return { success: false, error: response.error || 'Giriş başarısız oldu' };
+        const errorMessage = typeof response.error === 'string' ? response.error : 'Giriş başarısız oldu';
+        return { success: false, error: errorMessage };
       }
     } catch (error) {
       console.error('Login error:', error);
@@ -99,7 +100,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return { success: false, error: 'Kayıt başarılı ancak giriş yapılamadı' };
       } else {
         // API'den gelen error zaten çevrilmiş olacak
-        return { success: false, error: response.error || 'Kayıt başarısız oldu' };
+        const errorMessage = typeof response.error === 'string' ? response.error : 'Kayıt başarısız oldu';
+        return { success: false, error: errorMessage };
       }
     } catch (error) {
       console.error('Register error:', error);

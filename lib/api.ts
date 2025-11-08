@@ -1,6 +1,6 @@
 import { translateErrorMessage } from '@/constants/error-messages';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3003';
 
 export interface ApiResponse<T> {
   data?: T;
@@ -195,7 +195,12 @@ class ApiClient {
         let errorText: string;
         try {
           const errorData = await response.json();
+          console.log("API Error Data:", errorData);
           errorText = errorData.message || errorData.error || `HTTP ${response.status}`;
+          // Ensure errorText is a string
+          if (typeof errorText !== 'string') {
+            errorText = JSON.stringify(errorText);
+          }
         } catch {
           errorText = await response.text() || `HTTP ${response.status}`;
         }
@@ -626,7 +631,12 @@ class ApiClient {
         let errorText: string;
         try {
           const errorData = await response.json();
+          console.log("API Error Data:", errorData);
           errorText = errorData.message || errorData.error || `HTTP ${response.status}`;
+          // Ensure errorText is a string
+          if (typeof errorText !== 'string') {
+            errorText = JSON.stringify(errorText);
+          }
         } catch {
           errorText = await response.text() || `HTTP ${response.status}`;
         }

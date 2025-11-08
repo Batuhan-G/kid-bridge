@@ -421,6 +421,105 @@ CORS_ORIGIN="http://localhost:3000"
 
 ---
 
+## Canlı Veri Entegrasyonu - 28 Ekim 2025
+
+### Değişiklik Özeti
+Header çocuk seçimi, dashboard çocuk bilgileri ve sidebar çocuk verilerinde mock data kullanımı kaldırıldı ve gerçek API verilerine geçildi.
+
+### Yapılan Değişiklikler
+
+#### 1. Dashboard Sayfası (`app/dashboard/page.tsx`)
+- **Mock veri kaldırıldı**: Hardcoded çocuk listesi (Elif, Can, Zeynep) kaldırıldı
+- **API entegrasyonu**: `api.getChildren()` ile gerçek çocuk verisi çekilmesi eklendi
+- **Interface güncellemesi**: DashboardChild interface'i kaldırıldı, API Child interface'i kullanılmaya başlandı
+- **Yaş hesaplama**: `calculateChildAge()` fonksiyonu eklendi (dateOfBirth'den yaş hesaplama)
+- **Stats güncelleme**: Mock stats yerine `_count` alanları kullanılmaya başlandı
+- **Header çocuk seçimi**: Gerçek çocuk verisiyle çalışacak şekilde güncellendi
+- **Loading state**: İlk yüklemede loading durumu eklendi
+- **Null safety**: selectedChild null olma durumu için güvenli kontroller eklendi
+
+#### 2. Sidebar (`components/sidebar/sidebar.tsx`)
+- **API uyumluluğu**: Zaten Child interface'ini kullandığı için ek değişiklik gerekmedi
+- **Yaş hesaplama**: calculateChildAge fonksiyonu eklendi
+- **Avatar oluşturma**: firstName'den avatar harfi üretildi
+
+#### 3. Calendar Sayfası (`app/calendar/page.tsx`)
+- **API entegrasyonu**: useAuth ve api.getChildren() eklendi
+- **Interface güncellemesi**: Child import'u eklendi
+- **Mock veri temizleme**: Hardcoded çocuk verisi kaldırıldı
+- **ChildSelector geçici kaldırma**: Type conflict nedeniyle geçici olarak kaldırıldı
+- **Form düzeltmeleri**: Select component'lerindeki name/required prop'ları düzeltildi
+
+### Teknik Detaylar
+
+#### API Entegrasyonu
+```typescript
+// Eski (Mock)
+const children = [
+  { id: 1, name: "Elif", age: 8, avatar: "E", stats: {...} }
+]
+
+// Yeni (API)
+const [children, setChildren] = useState<Child[]>([]);
+useEffect(() => {
+  const result = await api.getChildren();
+  setChildren(result.data);
+}, [user, authLoading]);
+```
+
+#### Veri Yapısı Değişimi
+```typescript
+// Eski Mock Format
+interface MockChild {
+  id: number;
+  name: string;
+  age: number;
+  avatar: string;
+  stats: {
+    upcomingEvents: number;
+    unreadMessages: number;
+    monthlyExpenses: number;
+  };
+}
+
+// Yeni API Format
+interface Child {
+  id: string;
+  firstName: string;
+  lastName: string;
+  dateOfBirth: string;
+  _count?: {
+    activities: number;
+    messages: number;
+    expenses: number;
+    documents: number;
+    milestones: number;
+  };
+}
+```
+
+### Faydalar
+1. **Gerçek Veri**: Kullanıcılar artık kendi çocuklarını görüyor
+2. **Dinamik İçerik**: Çocuk sayısı ve bilgileri gerçek zamanlı
+3. **Tutarlılık**: Tüm sayfalarda aynı veri yapısı
+4. **Güvenlik**: API kimlik doğrulaması ile korumalı veriler
+5. **Performans**: Gereksiz mock veri kaldırıldı
+
+### Kalan İşler
+1. **ChildSelector Component**: Type conflict çözülmeli
+2. **Development Page**: Benzer güncellemeler yapılmalı
+3. **Error Handling**: API hatası durumları iyileştirilebilir
+4. **Loading States**: Daha gelişmiş loading UI eklenebilir
+
+### Test Sonuçları
+- ✅ Dashboard: Gerçek çocuk verisi görüntüleniyor
+- ✅ Header: Çocuk seçimi çalışıyor
+- ✅ Sidebar: Çocuk listesi dinamik
+- ⚠️ Calendar: ChildSelector geçici devre dışı
+- ❌ Development: Henüz güncellenmedi
+
+---
+
 ## Güvenlik Analizi ve İyileştirme Planı
 
 ### Tespit Edilen Kritik Güvenlik Zaafiyetleri

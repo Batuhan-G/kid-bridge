@@ -66,10 +66,12 @@ export const processApiError = (error: any): TranslatedError => {
     originalMessage = 'Beklenmeyen bir hata oluştu';
   }
 
-  const translatedMessage = translateErrorMessage(originalMessage);
+  // Ensure originalMessage is a string
+  const messageStr = String(originalMessage);
+  const translatedMessage = translateErrorMessage(messageStr);
 
   return {
-    originalMessage,
+    originalMessage: messageStr,
     translatedMessage,
     statusCode,
     field,

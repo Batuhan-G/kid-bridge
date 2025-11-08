@@ -4,7 +4,10 @@ import { useState, useEffect } from "react";
 import { AuthGuard } from "@/lib/auth-guard";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/hooks/use-toast";
-import { api } from "@/lib/api";
+import { api, Child } from "@/lib/api";
+import { ChildSelector } from "@/components/child-selector/child-selector";
+import { mapApiChildToSelector } from "@/components/child-selector/child-selector.types";
+import type { Child as SelectorChild } from "@/components/child-selector/child-selector.types";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -42,17 +45,7 @@ import { SidebarTrigger } from "@/components/sidebar-trigger/sidebar-trigger";
 import { Sidebar } from "@/components/sidebar/sidebar";
 import { PendingInvitations } from "@/components/pending-invitations/pending-invitations";
 
-interface Child {
-  id: number;
-  name: string;
-  age: number;
-  avatar: string;
-  stats: {
-    upcomingEvents: number;
-    unreadMessages: number;
-    monthlyExpenses: number;
-  };
-}
+// Using Child interface from API
 
 interface Event {
   id: number;
@@ -75,43 +68,9 @@ interface Message {
 function DashboardContent() {
   const { toast } = useToast();
   const { user, isLoading: authLoading } = useAuth();
-  const [children] = useState<Child[]>([
-    {
-      id: 1,
-      name: "Elif",
-      age: 8,
-      avatar: "E",
-      stats: {
-        upcomingEvents: 3,
-        unreadMessages: 1,
-        monthlyExpenses: 1200,
-      },
-    },
-    {
-      id: 2,
-      name: "Can",
-      age: 12,
-      avatar: "C",
-      stats: {
-        upcomingEvents: 2,
-        unreadMessages: 2,
-        monthlyExpenses: 800,
-      },
-    },
-    {
-      id: 3,
-      name: "Zeynep",
-      age: 6,
-      avatar: "Z",
-      stats: {
-        upcomingEvents: 1,
-        unreadMessages: 0,
-        monthlyExpenses: 450,
-      },
-    },
-  ]);
-
-  const [selectedChild, setSelectedChild] = useState(children[0]);
+  const [children, setChildren] = useState<Child[]>([]);
+  const [isLoadingChildren, setIsLoadingChildren] = useState(true);
+  const [selectedChild, setSelectedChild] = useState<Child | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [invitationCount, setInvitationCount] = useState(0);
   const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
@@ -124,6 +83,44 @@ function DashboardContent() {
   ).length;
   const [processingNotifications, setProcessingNotifications] = useState<Set<string>>(new Set());
 
+  // Map API children to selector format
+  const mappedChildren: SelectorChild[] = children.map(mapApiChildToSelector);
+  const mappedSelectedChild: SelectorChild | null = selectedChild ? mapApiChildToSelector(selectedChild) : null;
+
+  // Handle child selector change
+  const handleChildSelectorChange = (selectorChild: SelectorChild) => {
+    const apiChild = children.find(c => c.id === selectorChild.id);
+    if (apiChild) {
+      setSelectedChild(apiChild);
+    }
+  };
+
+  // Fetch children data - only when user is authenticated
+  useEffect(() => {
+    if (!user || authLoading) return;
+    
+    const fetchChildren = async () => {
+      try {
+        setIsLoadingChildren(true);
+        const result = await api.getChildren();
+        if (!result.error && result.data) {
+          setChildren(result.data);
+          // Set first child as selected if none selected
+          if (!selectedChild && result.data.length > 0) {
+            setSelectedChild(result.data[0]);
+          }
+        } else {
+          console.error('Failed to fetch children:', result.error);
+        }
+      } catch (error) {
+        console.error('Failed to fetch children:', error);
+      } finally {
+        setIsLoadingChildren(false);
+      }
+    };
+
+    fetchChildren();
+  }, [user, authLoading]);
 
   // Fetch notifications - only when user is authenticated
   useEffect(() => {
@@ -313,12 +310,15 @@ function DashboardContent() {
 
   const totalStats = {
     events: children.reduce(
-      (sum, child) => sum + child.stats.upcomingEvents,
+      (sum, child) => sum + (child._count?.activities || 0),
       0
     ),
-    messages: 0, // Will be replaced with real message count later
+    messages: children.reduce(
+      (sum, child) => sum + (child._count?.messages || 0),
+      0
+    ),
     expenses: children.reduce(
-      (sum, child) => sum + child.stats.monthlyExpenses,
+      (sum, child) => sum + (child._count?.expenses || 0),
       0
     ),
   };
@@ -370,7 +370,17 @@ function DashboardContent() {
 
             {/* Navigation - hide on mobile/tablet, show on desktop (768px+) */}
             <div className="hidden md:flex items-center space-x-4">
-                 <div className="flex items-center space-x-2">
+              {/* Child Selector */}
+              {!isLoadingChildren && mappedSelectedChild && mappedChildren.length > 0 && (
+                <ChildSelector
+                  children={mappedChildren}
+                  selectedChild={mappedSelectedChild}
+                  onChildChange={handleChildSelectorChange}
+                />
+              )}
+
+              {/* Notification Bell */}
+              <div className="flex items-center space-x-2">
                 <Popover open={isNotificationsOpen} onOpenChange={setIsNotificationsOpen}>
                   <PopoverTrigger asChild>
                     <Button variant="ghost" size="sm" className="relative">
@@ -511,43 +521,6 @@ function DashboardContent() {
                   </PopoverContent>
                 </Popover>
               </div>
-              <Select
-                value={selectedChild.id.toString()}
-                onValueChange={(value) =>
-                  setSelectedChild(
-                    children.find((c) => c.id === Number.parseInt(value)) ||
-                      children[0]
-                  )
-                }
-              >
-                <SelectTrigger className="w-48">
-                  <SelectValue>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center text-white text-xs">
-                        {selectedChild.avatar}
-                      </div>
-                      <span>
-                        {selectedChild.name} ({selectedChild.age} yaş)
-                      </span>
-                    </div>
-                  </SelectValue>
-                </SelectTrigger>
-                <SelectContent>
-                  {children.map((child) => (
-                    <SelectItem key={child.id} value={child.id.toString()}>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-6 h-6 bg-indigo-600 rounded-full flex items-center justify-center text-white text-xs">
-                          {child.avatar}
-                        </div>
-                        <span>
-                          {child.name} ({child.age} yaş)
-                        </span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-           
             </div>
 
             {/* Mobile: empty div to maintain layout */}
@@ -571,10 +544,16 @@ function DashboardContent() {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
             Hoş geldiniz, {user?.firstName || 'Kullanıcı'}
           </h1>
-          <p className="text-gray-600">
-            {selectedChild.name} için bugün {selectedChild.stats.upcomingEvents}{" "}
-            etkinlik planlanmış
-          </p>
+          {mappedSelectedChild ? (
+            <p className="text-gray-600">
+              {mappedSelectedChild.name} için bugün {selectedChild?._count?.activities || 0}{" "}
+              etkinlik planlanmış
+            </p>
+          ) : (
+            <p className="text-gray-600">
+              Çocuk bilgileri yükleniyor...
+            </p>
+          )}
         </div>
 
         {/* Stats Overview */}
@@ -624,7 +603,7 @@ function DashboardContent() {
                 <Calendar className="w-8 h-8 text-indigo-600 mx-auto mb-2" />
                 <p className="font-medium text-sm">Takvim</p>
                 <p className="text-xs text-gray-500">
-                  {selectedChild.stats.upcomingEvents} etkinlik
+                  {selectedChild?._count?.activities || 0} etkinlik
                 </p>
               </CardContent>
             </Card>
@@ -636,11 +615,11 @@ function DashboardContent() {
                 <MessageCircle className="w-8 h-8 text-indigo-600 mx-auto mb-2" />
                 <p className="font-medium text-sm">Mesajlar</p>
                 <p className="text-xs text-gray-500">
-                  {selectedChild.stats.unreadMessages} yeni
+                  {selectedChild?._count?.messages || 0} yeni
                 </p>
-                {selectedChild.stats.unreadMessages > 0 && (
+                {(selectedChild?._count?.messages || 0) > 0 && (
                   <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                    {selectedChild.stats.unreadMessages}
+                    {selectedChild?._count?.messages || 0}
                   </span>
                 )}
               </CardContent>
@@ -663,7 +642,7 @@ function DashboardContent() {
                 <PieChart className="w-8 h-8 text-indigo-600 mx-auto mb-2" />
                 <p className="font-medium text-sm">Harcamalar</p>
                 <p className="text-xs text-gray-500">
-                  ₺{selectedChild.stats.monthlyExpenses}
+                  {selectedChild?._count?.expenses || 0} harcama
                 </p>
               </CardContent>
             </Card>

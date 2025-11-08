@@ -181,14 +181,14 @@ export function Sidebar({ children, selectedChild, onChildChange, totalStats, is
                     onToggle()
                   }}
                   className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg text-left transition-colors ${
-                    selectedChild.id === child.id
+                    selectedChild?.id === child.id
                       ? "bg-indigo-100 text-indigo-700"
                       : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
                   }`}
                 >
                   <Avatar className="w-8 h-8">
                     <AvatarFallback className="bg-indigo-600 text-white text-sm">
-                      {child.firstName.charAt(0).toUpperCase()}
+                      {child.firstName?.charAt(0)?.toUpperCase() || '?'}
                     </AvatarFallback>
                   </Avatar>
                   <div>

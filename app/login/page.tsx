@@ -67,7 +67,9 @@ function LoginForm() {
       
       if (result.success) {
       } else {
-        setError(result.error || "Giriş başarısız oldu. Lütfen bilgilerinizi kontrol edin.")
+        console.log("Login failed with result:", result)
+        const errorMessage = typeof result.error === 'string' ? result.error : "Giriş başarısız oldu. Lütfen bilgilerinizi kontrol edin."
+        setError(errorMessage)
       }
     } catch (error) {
       console.error("Login error:", error)
