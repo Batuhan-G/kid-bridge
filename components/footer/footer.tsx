@@ -5,8 +5,7 @@ export function Footer() {
     <footer className="bg-gray-900 text-white py-12">
       <div className="container mx-auto px-4">
         <div className="grid md:grid-cols-2 gap-8">
-          <div>
-            <div className="flex items-center space-x-2 mb-4">
+            <div className="flex self-start items-center space-x-2 mb-4">
               <Link href="/">
                 <div className="flex items-center justify-center cursor-pointer">
                   <img
@@ -18,8 +17,6 @@ export function Footer() {
               </Link>
               <span className="text-xl font-bold">KidBridge</span>
             </div>
-            <p className="text-gray-400">Çocuklar için daha iyi bir gelecek inşa ediyoruz.</p>
-          </div>
           <div>
             <h3 className="font-semibold mb-4">Destek</h3>
             <ul className="space-y-2 text-gray-400">

@@ -4,7 +4,7 @@ import { AuthProvider } from '@/lib/auth-context'
 
 export const metadata: Metadata = {
   title: 'KidBridge - Çocuklar İçin Ortak Gelecek',
-  description: 'Boşanmış ebeveynler için güvenli iletişim ve çocuk yönetim platformu',
+  description: 'Ebeveynler için güvenli iletişim ve çocuk yönetim platformu',
 }
 
 export default function RootLayout({
@@ -13,8 +13,11 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="tr">
-      <body>
+    <html lang="tr" suppressHydrationWarning>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+      </head>
+      <body suppressHydrationWarning>
         <AuthProvider>
           {children}
         </AuthProvider>
