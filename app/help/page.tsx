@@ -127,10 +127,10 @@ export default function HelpPage() {
             </CardHeader>
             <CardContent>
               <ul className="space-y-2 text-gray-600">
-                <li>• Çocuk verilerinin korunması</li>
-                <li>• İki faktörlü doğrulama</li>
-                <li>• Veri şifreleme sistemi</li>
-                <li>• KVKK uyumluluğu</li>
+                <li>• Güvenli veri depolama</li>
+                <li>• Şifrelenmiş parola sistemi</li>
+                <li>• HTTPS güvenli bağlantı</li>
+                <li>• Hesap gizlilik ayarları</li>
               </ul>
             </CardContent>
           </Card>
@@ -153,9 +153,10 @@ export default function HelpPage() {
             <AccordionItem value="item-2">
               <AccordionTrigger>Verilerim güvende mi?</AccordionTrigger>
               <AccordionContent>
-                Verilerinizi mümkün olan en yüksek güvenlik standartlarında korumaya odaklanıyoruz. 
-                Platform geliştirme aşamasında SSL şifreleme ve KVKK uyumluluğu implementasyonu 
-                planlanmıştır. Verilerinizi asla üçüncü taraflarla paylaşmayız.
+                Verilerinizi korumak için modern güvenlik önlemleri alıyoruz. HTTPS güvenli bağlantı,
+                şifrelenmiş parola depolama ve güvenlik başlıkları (security headers) kullanıyoruz.
+                Platform aktif geliştirme aşamasında olup, ek güvenlik özellikleri eklemeye devam ediyoruz.
+                Verilerinizi asla üçüncü taraflarla paylaşmayız.
               </AccordionContent>
             </AccordionItem>
 

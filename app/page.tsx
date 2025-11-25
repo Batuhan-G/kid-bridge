@@ -94,8 +94,8 @@ function LandingContent() {
           <Card className="text-center">
             <CardHeader>
               <Shield className="w-12 h-12 text-indigo-600 mx-auto mb-4" />
-              <CardTitle>Güvenli & Yasal</CardTitle>
-              <CardDescription>KVKK ve GDPR uyumlu, şifreli veri koruması</CardDescription>
+              <CardTitle>Güvenli Platform</CardTitle>
+              <CardDescription>HTTPS güvenli veri aktarımı ve şifrelenmiş parola koruması</CardDescription>
             </CardHeader>
           </Card>
         </div>
